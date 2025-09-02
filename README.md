@@ -1,27 +1,131 @@
-# PWAAngular
+# PWA Angular con Service Worker
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.3.9.
+## Descripción
+Este proyecto es una Progressive Web App (PWA) desarrollada con Angular que incluye un Service Worker para funcionalidades offline y caching.
 
-## Development server
+## Configuración del Service Worker
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+### 1. Instalación
+Para agregar el Service Worker a tu proyecto Angular, ejecuta:
 
-## Code scaffolding
+```bash
+ng add @angular/pwa
+```
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+Este comando realiza automáticamente:
+- Instala el paquete `@angular/service-worker`
+- Habilita el soporte de Service Worker en Angular CLI
+- Importa y registra el Service Worker en los providers de la aplicación
+- Actualiza `index.html` con:
+  - Link al archivo `manifest.webmanifest`
+  - Meta tag para theme-color
+  - Iconos para la PWA instalable
+- Crea el archivo de configuración `ngsw-config.json`
 
-## Build
+### 2. Construcción del Proyecto
+```bash
+ng build
+```
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+El proyecto se construye en `dist/pwa-angular/browser/`
 
-## Running unit tests
+## Uso del Service Worker
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+### 1. Servir la Aplicación
+```bash
+npx http-server -p 8080 -c-1 dist/pwa-angular/browser
+```
 
-## Running end-to-end tests
+### 2. Acceder a la Aplicación
+- URL local: `http://localhost:8080`
+- URL de red: `http://192.168.1.7:8080`
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+### 3. Funcionalidades del Service Worker
 
-## Further help
+#### Caching Automático
+El Service Worker cachea automáticamente:
+- `index.html`
+- `favicon.ico`
+- Archivos JS y CSS del build
+- Recursos en la carpeta `assets`
+- Iconos y fuentes
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+#### Modo Offline
+Para probar el modo offline:
+1. Abre DevTools (F12)
+2. Ve a la pestaña Network
+3. Selecciona "Offline" en el dropdown de Throttling
+4. Recarga la página - seguirá funcionando desde el cache
+
+#### Actualizaciones
+El Service Worker:
+- Instala actualizaciones en segundo plano
+- Cambia a la nueva versión en la siguiente recarga
+- Mantiene la versión anterior hasta que se confirme la nueva
+
+## Archivos de Configuración
+
+### ngsw-config.json
+Configura el comportamiento del caching y estrategias de red.
+
+### manifest.webmanifest
+Define la PWA como instalable con:
+- Nombre de la aplicación
+- Iconos en diferentes tamaños
+- Colores del tema
+- Configuración de display
+
+## Estructura del Proyecto
+```
+PWA_Angular/
+├── src/
+│   ├── app/
+│   ├── assets/
+│   │   └── icons/          # Iconos para la PWA
+│   ├── manifest.webmanifest
+│   └── index.html
+├── angular.json             # Configuración del build
+├── ngsw-config.json        # Configuración del Service Worker
+└── dist/
+    └── pwa-angular/
+        └── browser/         # Archivos construidos
+```
+
+## Comandos Útiles
+
+### Desarrollo
+```bash
+npm start          # Servidor de desarrollo
+npm run build     # Construir para producción
+```
+
+### Producción
+```bash
+npm run build     # Construir la aplicación
+npx http-server -p 8080 -c-1 dist/pwa-angular/browser
+```
+
+## Notas Importantes
+
+- **HTTPS**: El Service Worker solo se registra en localhost o HTTPS
+- **Testing**: Usa ventana incógnita para evitar conflictos de cache
+- **Actualizaciones**: El Service Worker no espera a verificar actualizaciones antes de servir la app
+- **Puerto**: Si el puerto 8080 está ocupado, usa otro puerto o mata el proceso existente
+
+## Solución de Problemas
+
+### Puerto Ocupado
+```bash
+lsof -ti:8080 | xargs kill -9
+```
+
+### Limpiar Cache del Service Worker
+1. Abre DevTools
+2. Ve a Application > Service Workers
+3. Haz clic en "Unregister"
+4. Recarga la página
+
+## Recursos Adicionales
+- [Documentación oficial de Angular PWA](https://angular.io/guide/service-worker-getting-started)
+- [Guía de Service Workers](https://web.dev/service-workers/)
+- [PWA Checklist](https://web.dev/pwa-checklist/)
