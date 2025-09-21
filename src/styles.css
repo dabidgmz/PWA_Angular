@@ -1204,3 +1204,404 @@ body {
 }
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+/* ========================================
+   RESPONSIVE DESIGN - MEDIA QUERIES
+   ======================================== */
+
+/* Extra Small Devices (phones, 320px and up) */
+@media (max-width: 575.98px) {
+  /* Dashboard responsive */
+  .dashboard-header h1 {
+    font-size: 2rem !important;
+  }
+  
+  .dashboard-header p {
+    font-size: 0.875rem !important;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+  
+  .stat-card {
+    padding: 1rem !important;
+  }
+  
+  .stat-card h3 {
+    font-size: 1.75rem !important;
+  }
+  
+  .stat-icon {
+    width: 3rem !important;
+    height: 3rem !important;
+  }
+  
+  /* Sidebar responsive */
+  .mat-sidenav {
+    width: 100vw !important;
+    max-width: 280px !important;
+  }
+  
+  .sidebar-logo {
+    padding: 1rem !important;
+  }
+  
+  .sidebar-logo h2 {
+    font-size: 1.125rem !important;
+  }
+  
+  .nav-item {
+    padding: 0.75rem 1rem !important;
+    margin: 0.25rem 0 !important;
+  }
+  
+  .nav-item mat-icon {
+    font-size: 1.125rem !important;
+  }
+  
+  .nav-item span {
+    font-size: 0.875rem !important;
+  }
+  
+  /* Toolbar responsive */
+  .mat-toolbar {
+    padding: 0.5rem 1rem !important;
+  }
+  
+  .user-info {
+    display: none !important;
+  }
+  
+  .menu-button {
+    display: block !important;
+  }
+  
+  /* Content responsive */
+  .main-content {
+    padding: 1rem !important;
+  }
+  
+  /* Tables responsive */
+  .mat-table {
+    font-size: 0.75rem !important;
+  }
+  
+  .mat-header-cell,
+  .mat-cell {
+    padding: 0.5rem !important;
+  }
+  
+  /* Forms responsive */
+  .form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+  
+  .mat-form-field {
+    width: 100% !important;
+  }
+  
+  /* Buttons responsive */
+  .action-buttons {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+  
+  .action-buttons button {
+    width: 100% !important;
+  }
+}
+
+/* Small Devices (landscape phones, 576px and up) */
+@media (min-width: 576px) and (max-width: 767.98px) {
+  .stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 1.5rem !important;
+  }
+  
+  .mat-sidenav {
+    width: 240px !important;
+  }
+  
+  .main-content {
+    padding: 1.5rem !important;
+  }
+  
+  .form-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+/* Medium Devices (tablets, 768px and up) */
+@media (min-width: 768px) and (max-width: 991.98px) {
+  .stats-grid {
+    grid-template-columns: 1fr 1fr 1fr !important;
+  }
+  
+  .mat-sidenav {
+    width: 260px !important;
+  }
+  
+  .main-content {
+    padding: 2rem !important;
+  }
+  
+  .form-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  
+  .user-info {
+    display: flex !important;
+  }
+}
+
+/* Large Devices (desktops, 992px and up) */
+@media (min-width: 992px) and (max-width: 1199.98px) {
+  .stats-grid {
+    grid-template-columns: 1fr 1fr 1fr !important;
+  }
+  
+  .mat-sidenav {
+    width: 280px !important;
+  }
+  
+  .main-content {
+    padding: 2.5rem !important;
+  }
+  
+  .form-grid {
+    grid-template-columns: 1fr 1fr 1fr !important;
+  }
+}
+
+/* Extra Large Devices (large desktops, 1200px and up) */
+@media (min-width: 1200px) {
+  .stats-grid {
+    grid-template-columns: 1fr 1fr 1fr !important;
+    gap: 2rem !important;
+  }
+  
+  .mat-sidenav {
+    width: 300px !important;
+  }
+  
+  .main-content {
+    padding: 3rem !important;
+  }
+  
+  .form-grid {
+    grid-template-columns: 1fr 1fr 1fr 1fr !important;
+  }
+  
+  .stat-card {
+    padding: 2rem !important;
+  }
+  
+  .stat-card h3 {
+    font-size: 2.5rem !important;
+  }
+}
+
+/* Ultra Wide Screens (1400px and up) */
+@media (min-width: 1400px) {
+  .container {
+    max-width: 1400px !important;
+    margin: 0 auto !important;
+  }
+  
+  .stats-grid {
+    gap: 2.5rem !important;
+  }
+  
+  .main-content {
+    padding: 3.5rem !important;
+  }
+}
+
+/* ========================================
+   COMPONENT-SPECIFIC RESPONSIVE STYLES
+   ======================================== */
+
+/* Dashboard Component */
+@media (max-width: 768px) {
+  .dashboard-header {
+    text-align: center !important;
+    margin-bottom: 2rem !important;
+  }
+  
+  .top-species-card {
+    margin-top: 2rem !important;
+  }
+  
+  .species-item {
+    flex-direction: column !important;
+    text-align: center !important;
+    gap: 0.5rem !important;
+  }
+  
+  .species-item .species-info {
+    align-items: center !important;
+  }
+}
+
+/* Trainers Component */
+@media (max-width: 768px) {
+  .trainers-header {
+    flex-direction: column !important;
+    gap: 1rem !important;
+    align-items: stretch !important;
+  }
+  
+  .search-field {
+    width: 100% !important;
+  }
+  
+  .stats-summary {
+    justify-content: space-around !important;
+  }
+  
+  .mat-table-container {
+    overflow-x: auto !important;
+  }
+  
+  .mat-table {
+    min-width: 600px !important;
+  }
+}
+
+/* Captures Component */
+@media (max-width: 768px) {
+  .captures-header {
+    flex-direction: column !important;
+    gap: 1rem !important;
+  }
+  
+  .filters-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+  
+  .export-button {
+    width: 100% !important;
+  }
+}
+
+/* QR Manager Component */
+@media (max-width: 768px) {
+  .qr-form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+  
+  .qr-codes-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 1rem !important;
+  }
+  
+  .qr-card {
+    padding: 1rem !important;
+  }
+}
+
+/* Settings Component */
+@media (max-width: 768px) {
+  .settings-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+  
+  .setting-item {
+    flex-direction: column !important;
+    gap: 1rem !important;
+    align-items: stretch !important;
+  }
+  
+  .setting-actions {
+    width: 100% !important;
+  }
+}
+
+/* ========================================
+   TOUCH DEVICE OPTIMIZATIONS
+   ======================================== */
+
+@media (hover: none) and (pointer: coarse) {
+  /* Touch devices */
+  .hover-effect:hover {
+    transform: none !important;
+  }
+  
+  .button,
+  .mat-button,
+  .mat-icon-button {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+  
+  .nav-item {
+    min-height: 48px !important;
+  }
+  
+  .mat-form-field {
+    margin-bottom: 1rem !important;
+  }
+  
+  .mat-table .mat-cell,
+  .mat-table .mat-header-cell {
+    padding: 1rem 0.5rem !important;
+  }
+}
+
+/* ========================================
+   PRINT STYLES
+   ======================================== */
+
+@media print {
+  .mat-sidenav,
+  .mat-toolbar,
+  .action-buttons,
+  .export-buttons {
+    display: none !important;
+  }
+  
+  .main-content {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  
+  .stat-card,
+  .content-card {
+    break-inside: avoid !important;
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+  }
+  
+  .mat-table {
+    font-size: 0.75rem !important;
+  }
+}
+
+/* ========================================
+   ACCESSIBILITY IMPROVEMENTS
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (prefers-contrast: high) {
+  .stat-card,
+  .content-card {
+    border: 2px solid !important;
+  }
+  
+  .mat-button {
+    border: 1px solid !important;
+  }
+}

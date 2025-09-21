@@ -28,52 +28,76 @@ import { PokemonIconComponent } from '../shared/components/pokemon-icon.componen
   ],
   template: `
     <mat-sidenav-container class="h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      <mat-sidenav #sidenav mode="side" opened class="w-64 bg-white shadow-xl">
+      <mat-sidenav #sidenav mode="side" opened class="w-72 bg-white shadow-2xl border-r border-gray-100">
         <!-- Logo Section -->
-        <div class="p-6 border-b border-gray-200">
-          <div class="flex items-center space-x-3">
-            <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-              <mat-icon class="text-white text-2xl">biotech</mat-icon>
+        <div class="sidebar-logo p-8 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-purple-50">
+          <div class="flex items-center space-x-4">
+            <div class="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <mat-icon class="text-white text-3xl">biotech</mat-icon>
             </div>
             <div>
-              <h2 class="text-xl font-bold text-gray-800">Profesor Oak</h2>
-              <p class="text-sm text-gray-600">Panel Pokémon</p>
+              <h2 class="text-2xl font-bold text-gray-800 mb-1">Profesor Oak</h2>
+              <p class="text-sm text-gray-600 font-medium">Panel Pokémon</p>
             </div>
           </div>
         </div>
         
         <!-- Navigation -->
-        <div class="p-4">
-          <nav class="space-y-2">
-            <a routerLink="/dashboard" routerLinkActive="active" 
-               class="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 hover:bg-blue-50 group">
-              <mat-icon class="text-blue-500 group-hover:scale-110 transition-transform text-xl">dashboard</mat-icon>
-              <span class="font-medium text-gray-700 group-hover:text-blue-600">Dashboard</span>
-            </a>
+        <div class="p-6 flex-1">
+          <nav class="space-y-3">
+            <div class="mb-6">
+              <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 px-3">Navegación</h3>
+              
+              <a routerLink="/dashboard" routerLinkActive="active" 
+                 class="nav-item flex items-center space-x-4 px-4 py-4 rounded-2xl transition-all duration-300 hover:bg-blue-50 group relative">
+                <div class="icon-container w-10 h-10 bg-blue-100 group-hover:bg-blue-200 rounded-xl flex items-center justify-center transition-colors">
+                  <mat-icon class="text-blue-600 group-hover:scale-110 transition-transform text-xl">dashboard</mat-icon>
+                </div>
+                <span class="font-semibold text-gray-700 group-hover:text-blue-600 text-lg">Dashboard</span>
+                <div class="indicator absolute right-4 w-2 h-2 bg-blue-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              </a>
+              
+              <a routerLink="/trainers" routerLinkActive="active" 
+                 class="nav-item flex items-center space-x-4 px-4 py-4 rounded-2xl transition-all duration-300 hover:bg-green-50 group relative">
+                <div class="icon-container w-10 h-10 bg-green-100 group-hover:bg-green-200 rounded-xl flex items-center justify-center transition-colors">
+                  <mat-icon class="text-green-600 group-hover:scale-110 transition-transform text-xl">sports_esports</mat-icon>
+                </div>
+                <span class="font-semibold text-gray-700 group-hover:text-green-600 text-lg">Entrenadores</span>
+                <div class="indicator absolute right-4 w-2 h-2 bg-green-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              </a>
+              
+              <a routerLink="/captures" routerLinkActive="active" 
+                 class="nav-item flex items-center space-x-4 px-4 py-4 rounded-2xl transition-all duration-300 hover:bg-yellow-50 group relative">
+                <div class="icon-container w-10 h-10 bg-yellow-100 group-hover:bg-yellow-200 rounded-xl flex items-center justify-center transition-colors">
+                  <mat-icon class="text-yellow-600 group-hover:scale-110 transition-transform text-xl">catching_pokemon</mat-icon>
+                </div>
+                <span class="font-semibold text-gray-700 group-hover:text-yellow-600 text-lg">Capturas</span>
+                <div class="indicator absolute right-4 w-2 h-2 bg-yellow-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              </a>
+              
+              <a routerLink="/qr-manager" routerLinkActive="active" 
+                 class="nav-item flex items-center space-x-4 px-4 py-4 rounded-2xl transition-all duration-300 hover:bg-purple-50 group relative">
+                <div class="icon-container w-10 h-10 bg-purple-100 group-hover:bg-purple-200 rounded-xl flex items-center justify-center transition-colors">
+                  <mat-icon class="text-purple-600 group-hover:scale-110 transition-transform text-xl">qr_code_scanner</mat-icon>
+                </div>
+                <span class="font-semibold text-gray-700 group-hover:text-purple-600 text-lg">QR Manager</span>
+                <div class="indicator absolute right-4 w-2 h-2 bg-purple-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              </a>
+            </div>
             
-            <a routerLink="/trainers" routerLinkActive="active" 
-               class="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 hover:bg-green-50 group">
-              <mat-icon class="text-green-500 group-hover:scale-110 transition-transform text-xl">sports_esports</mat-icon>
-              <span class="font-medium text-gray-700 group-hover:text-green-600">Entrenadores</span>
-            </a>
-            
-            <a routerLink="/captures" routerLinkActive="active" 
-               class="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 hover:bg-yellow-50 group">
-              <mat-icon class="text-yellow-500 group-hover:scale-110 transition-transform text-xl">catching_pokemon</mat-icon>
-              <span class="font-medium text-gray-700 group-hover:text-yellow-600">Capturas</span>
-            </a>
-            
-            <a routerLink="/qr-manager" routerLinkActive="active" 
-               class="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 hover:bg-purple-50 group">
-              <mat-icon class="text-purple-500 group-hover:scale-110 transition-transform text-xl">qr_code_scanner</mat-icon>
-              <span class="font-medium text-gray-700 group-hover:text-purple-600">QR Manager</span>
-            </a>
-            
-            <a routerLink="/settings" routerLinkActive="active" 
-               class="flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 hover:bg-gray-50 group">
-              <mat-icon class="text-gray-500 group-hover:scale-110 transition-transform text-xl">tune</mat-icon>
-              <span class="font-medium text-gray-700 group-hover:text-gray-600">Ajustes</span>
-            </a>
+            <!-- Settings Section -->
+            <div class="mt-8 pt-6 border-t border-gray-100">
+              <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 px-3">Configuración</h3>
+              
+              <a routerLink="/settings" routerLinkActive="active" 
+                 class="nav-item flex items-center space-x-4 px-4 py-4 rounded-2xl transition-all duration-300 hover:bg-gray-50 group relative">
+                <div class="icon-container w-10 h-10 bg-gray-100 group-hover:bg-gray-200 rounded-xl flex items-center justify-center transition-colors">
+                  <mat-icon class="text-gray-600 group-hover:scale-110 transition-transform text-xl">tune</mat-icon>
+                </div>
+                <span class="font-semibold text-gray-700 group-hover:text-gray-600 text-lg">Ajustes</span>
+                <div class="indicator absolute right-4 w-2 h-2 bg-gray-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              </a>
+            </div>
           </nav>
         </div>
       </mat-sidenav>
@@ -81,7 +105,7 @@ import { PokemonIconComponent } from '../shared/components/pokemon-icon.componen
       <mat-sidenav-content>
         <!-- Top Toolbar -->
         <mat-toolbar class="bg-white shadow-sm border-b border-gray-200">
-          <button mat-icon-button (click)="sidenav.toggle()" class="md:hidden mr-4">
+          <button mat-icon-button (click)="sidenav.toggle()" class="menu-button md:hidden mr-4">
             <mat-icon class="text-gray-600 text-xl">menu</mat-icon>
           </button>
           
@@ -89,7 +113,7 @@ import { PokemonIconComponent } from '../shared/components/pokemon-icon.componen
           
           <!-- User Menu -->
           <div class="flex items-center space-x-4">
-            <div class="hidden md:flex items-center space-x-3 bg-gray-50 rounded-full px-4 py-2">
+            <div class="user-info hidden md:flex items-center space-x-3 bg-gray-50 rounded-full px-4 py-2">
               <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center user-avatar">
                 <mat-icon class="text-white text-base">account_circle</mat-icon>
               </div>
@@ -110,7 +134,7 @@ import { PokemonIconComponent } from '../shared/components/pokemon-icon.componen
         </mat-toolbar>
         
         <!-- Main Content -->
-        <div class="p-6 min-h-screen bg-gray-50">
+        <div class="main-content p-6 min-h-screen bg-gray-50">
           <router-outlet></router-outlet>
         </div>
       </mat-sidenav-content>
@@ -120,7 +144,12 @@ import { PokemonIconComponent } from '../shared/components/pokemon-icon.componen
     .active {
       background: linear-gradient(135deg, #3b82f6, #8b5cf6) !important;
       color: white !important;
-      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3) !important;
+      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4) !important;
+      transform: translateX(4px) !important;
+    }
+    
+    .active .icon-container {
+      background: rgba(255, 255, 255, 0.2) !important;
     }
     
     .active mat-icon {
@@ -129,10 +158,17 @@ import { PokemonIconComponent } from '../shared/components/pokemon-icon.componen
     
     .active span {
       color: white !important;
+      font-weight: 700 !important;
+    }
+    
+    .active .indicator {
+      opacity: 1 !important;
+      background: white !important;
     }
     
     mat-sidenav {
       border-right: 1px solid #e5e7eb;
+      backdrop-filter: blur(10px);
     }
     
     mat-toolbar {
@@ -158,6 +194,92 @@ import { PokemonIconComponent } from '../shared/components/pokemon-icon.componen
       align-items: center !important;
       justify-content: center !important;
       line-height: 1 !important;
+    }
+    
+    /* Estilos mejorados para el sidebar */
+    .sidebar-logo {
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    }
+    
+    .nav-item {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .nav-item::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 3px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      transform: scaleY(0);
+      transition: transform 0.3s ease;
+    }
+    
+    .nav-item:hover::before {
+      transform: scaleY(1);
+    }
+    
+    .active::before {
+      transform: scaleY(1) !important;
+    }
+    
+    /* Iconos con mejor diseño */
+    .icon-container {
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .nav-item:hover .icon-container {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    }
+    
+    /* Indicador de estado activo */
+    .indicator {
+      transition: all 0.3s ease;
+    }
+    
+    /* Animación de entrada */
+    .nav-item {
+      animation: slideInLeft 0.3s ease forwards;
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    
+    .nav-item:nth-child(1) { animation-delay: 0.1s; }
+    .nav-item:nth-child(2) { animation-delay: 0.2s; }
+    .nav-item:nth-child(3) { animation-delay: 0.3s; }
+    .nav-item:nth-child(4) { animation-delay: 0.4s; }
+    .nav-item:nth-child(5) { animation-delay: 0.5s; }
+    
+    @keyframes slideInLeft {
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+    
+    /* Mejoras responsivas para el nuevo diseño */
+    @media (max-width: 768px) {
+      .sidebar-logo {
+        padding: 1.5rem !important;
+      }
+      
+      .sidebar-logo h2 {
+        font-size: 1.25rem !important;
+      }
+      
+      .nav-item {
+        padding: 0.75rem 1rem !important;
+        margin: 0.25rem 0 !important;
+      }
+      
+      .nav-item span {
+        font-size: 0.875rem !important;
+      }
     }
   `]
 })
