@@ -23,51 +23,51 @@ import { PokemonIconComponent } from '../shared/components/pokemon-icon.componen
       <!-- Stats Cards -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <!-- Total Trainers -->
-        <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
+        <div class="bg-gradient-to-br from-red-50 to-red-100 p-6 rounded-2xl shadow-lg border border-red-200 hover:shadow-xl transition-shadow duration-300">
           <div class="flex items-center justify-between">
             <div>
-              <h3 class="text-3xl font-bold text-gray-800">{{ totalTrainers }}</h3>
-              <p class="text-gray-600 mt-1">Total Entrenadores</p>
+              <h3 class="text-3xl font-bold text-red-800">{{ totalTrainers }}</h3>
+              <p class="text-red-600 mt-1">Total Entrenadores</p>
               <div class="flex items-center mt-2">
                 <span class="text-sm text-green-600 font-medium">+12%</span>
-                <span class="text-sm text-gray-500 ml-1">vs mes anterior</span>
+                <span class="text-sm text-red-500 ml-1">vs mes anterior</span>
               </div>
             </div>
-            <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+            <div class="w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center shadow-lg">
               <app-pokemon-icon type="trainer" size="2xl" class="text-white"></app-pokemon-icon>
             </div>
           </div>
         </div>
         
         <!-- Total Captures -->
-        <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
+        <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-2xl shadow-lg border border-green-200 hover:shadow-xl transition-shadow duration-300">
           <div class="flex items-center justify-between">
             <div>
-              <h3 class="text-3xl font-bold text-gray-800">{{ totalCaptures }}</h3>
-              <p class="text-gray-600 mt-1">Capturas Totales</p>
+              <h3 class="text-3xl font-bold text-green-800">{{ totalCaptures }}</h3>
+              <p class="text-green-600 mt-1">Capturas Totales</p>
               <div class="flex items-center mt-2">
                 <span class="text-sm text-green-600 font-medium">+8%</span>
-                <span class="text-sm text-gray-500 ml-1">vs mes anterior</span>
+                <span class="text-sm text-green-500 ml-1">vs mes anterior</span>
               </div>
             </div>
-            <div class="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center">
-              <app-pokemon-icon type="pokeball" size="2xl" class="text-white"></app-pokemon-icon>
+            <div class="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center shadow-lg">
+              <mat-icon class="text-white text-4xl">catching_pokemon</mat-icon>
             </div>
           </div>
         </div>
         
         <!-- Active Trainers -->
-        <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300">
+        <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-2xl shadow-lg border border-purple-200 hover:shadow-xl transition-shadow duration-300">
           <div class="flex items-center justify-between">
             <div>
-              <h3 class="text-3xl font-bold text-gray-800">{{ activeTrainers }}</h3>
-              <p class="text-gray-600 mt-1">Entrenadores Activos</p>
+              <h3 class="text-3xl font-bold text-purple-800">{{ activeTrainers }}</h3>
+              <p class="text-purple-600 mt-1">Entrenadores Activos</p>
               <div class="flex items-center mt-2">
                 <span class="text-sm text-green-600 font-medium">+15%</span>
-                <span class="text-sm text-gray-500 ml-1">vs mes anterior</span>
+                <span class="text-sm text-purple-500 ml-1">vs mes anterior</span>
               </div>
             </div>
-            <div class="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center">
+            <div class="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
               <app-pokemon-icon type="star" size="2xl" class="text-white"></app-pokemon-icon>
             </div>
           </div>
@@ -77,8 +77,8 @@ import { PokemonIconComponent } from '../shared/components/pokemon-icon.componen
       <!-- Top Species -->
       <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
         <div class="flex items-center space-x-3 mb-6">
-          <div class="w-12 h-12 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-            <app-pokemon-icon type="trophy" size="xl" class="text-white"></app-pokemon-icon>
+          <div class="w-12 h-12 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-full flex items-center justify-center">
+            <mat-icon class="text-white text-2xl">emoji_events</mat-icon>
           </div>
           <h3 class="text-2xl font-bold text-gray-800">Top Especies Capturadas</h3>
         </div>
@@ -88,7 +88,7 @@ import { PokemonIconComponent } from '../shared/components/pokemon-icon.componen
                class="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all duration-300 border border-gray-100">
             <div class="flex items-center space-x-4">
               <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                <app-pokemon-icon type="pokeball" size="large" class="text-white"></app-pokemon-icon>
+                <mat-icon class="text-white text-xl">pets</mat-icon>
               </div>
               <div>
                 <h4 class="font-semibold text-gray-800">{{ species.name }}</h4>

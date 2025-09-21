@@ -90,7 +90,7 @@ import { PokemonIconComponent } from '../shared/components/pokemon-icon.componen
           <!-- User Menu -->
           <div class="flex items-center space-x-4">
             <div class="hidden md:flex items-center space-x-3 bg-gray-50 rounded-full px-4 py-2">
-              <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+              <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center user-avatar">
                 <mat-icon class="text-white text-base">account_circle</mat-icon>
               </div>
               <span class="text-sm font-medium text-gray-700">{{ user?.name }}</span>
@@ -141,6 +141,23 @@ import { PokemonIconComponent } from '../shared/components/pokemon-icon.componen
     
     a {
       text-decoration: none;
+    }
+    
+    /* Centrar iconos de Material Design */
+    .mat-icon {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      width: 100% !important;
+      height: 100% !important;
+    }
+    
+    /* Centrar específicamente el avatar del usuario */
+    .user-avatar mat-icon {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      line-height: 1 !important;
     }
   `]
 })
