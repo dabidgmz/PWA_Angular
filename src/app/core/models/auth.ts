@@ -1,11 +1,34 @@
 export interface User {
-  id: string;
+  id: number | string;
   email: string;
   name: string;
-  role: string;
+  role: 'trainer' | 'profesor' | 'professor';
+  phone?: string;
+  gender?: string;
+  isVerified?: boolean;
+  isBanned?: boolean;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface RegisterRequest {
+  name: string;
+  email: string;
+  password: string;
+  phone?: string;
+  gender?: 'male' | 'female' | 'other';
 }
 
 export interface AuthResponse {
-  user: User;
   token: string;
+  user: User;
 }
+
+export interface RegisterResponse {
+  userId: number;
+  message: string;
+}
+

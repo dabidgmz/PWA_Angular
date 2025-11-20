@@ -1,4 +1,6 @@
 import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, OnDestroy } from '@angular/core';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
@@ -9,7 +11,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
-import { Capture, RarityType } from '../core/models/capture';
+import { RarityType } from '../core/models/capture';
+import { AdminService, Capture } from '../core/services/admin.service';
 import flatpickr from 'flatpickr';
 
 @Component({
@@ -45,18 +48,45 @@ import flatpickr from 'flatpickr';
       
       <!-- Filters -->
       <div class="glass-card p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-semibold text-gray-800">Filtros de Búsqueda</h3>
+          <button 
+            *ngIf="searchTerm || speciesFilter || rarityFilter || dateFilter"
+            mat-button 
+            (click)="clearFilters()"
+            class="text-sm text-red-600">
+            <mat-icon class="text-sm mr-1">clear</mat-icon>
+            Limpiar Filtros
+          </button>
+        </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <mat-form-field appearance="outline">
             <mat-label>Buscar</mat-label>
-            <input matInput (keyup)="applyFilter()" [(ngModel)]="searchTerm" placeholder="Entrenador o especie" class="text-gray-800">
+            <input 
+              matInput 
+              (keyup.enter)="applyFilter()" 
+              [(ngModel)]="searchTerm" 
+              placeholder="Entrenador o especie" 
+              class="text-gray-800">
             <mat-icon matPrefix class="text-gray-400 mr-2">search</mat-icon>
+            <button 
+              *ngIf="searchTerm" 
+              matSuffix 
+              mat-icon-button 
+              (click)="searchTerm = ''; applyFilter()"
+              type="button"
+              aria-label="Limpiar búsqueda">
+              <mat-icon>close</mat-icon>
+            </button>
           </mat-form-field>
           
           <mat-form-field appearance="outline">
             <mat-label>Especie</mat-label>
             <mat-select [(ngModel)]="speciesFilter" (selectionChange)="applyFilter()">
               <mat-option value="">Todas</mat-option>
-              <mat-option *ngFor="let species of species" [value]="species">{{ species }}</mat-option>
+              <mat-option *ngFor="let species of species" [value]="species">
+                <span class="capitalize">{{ species }}</span>
+              </mat-option>
             </mat-select>
           </mat-form-field>
           
@@ -64,7 +94,9 @@ import flatpickr from 'flatpickr';
             <mat-label>Rareza</mat-label>
             <mat-select [(ngModel)]="rarityFilter" (selectionChange)="applyFilter()">
               <mat-option value="">Todas</mat-option>
-              <mat-option *ngFor="let rarity of rarities" [value]="rarity">{{ rarity }}</mat-option>
+              <mat-option *ngFor="let rarity of rarities" [value]="rarity">
+                <span class="capitalize">{{ rarity === 'legend' ? 'Legendario' : (rarity === 'common' ? 'Común' : (rarity === 'rare' ? 'Raro' : 'Épico')) }}</span>
+              </mat-option>
             </mat-select>
           </mat-form-field>
           
@@ -84,7 +116,7 @@ import flatpickr from 'flatpickr';
                   <div class="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-600 rounded-full flex items-center justify-center">
                     <mat-icon class="text-white text-sm">person</mat-icon>
                   </div>
-                  <span class="font-semibold text-gray-800">{{ capture.trainerName }}</span>
+                  <span class="font-semibold text-gray-800">{{ capture.trainer.name }}</span>
                 </div>
               </td>
             </ng-container>
@@ -94,7 +126,7 @@ import flatpickr from 'flatpickr';
               <td mat-cell *matCellDef="let capture" class="py-4">
                 <div class="flex items-center space-x-2">
                   <mat-icon class="text-yellow-500">pets</mat-icon>
-                  <span class="font-semibold text-gray-800">{{ capture.species }}</span>
+                  <span class="font-semibold text-gray-800 capitalize">{{ capture.pokemon.name }}</span>
                 </div>
               </td>
             </ng-container>
@@ -119,7 +151,7 @@ import flatpickr from 'flatpickr';
               <td mat-cell *matCellDef="let capture" class="py-4">
                 <div class="flex items-center space-x-2">
                   <mat-icon class="text-gray-400">schedule</mat-icon>
-                  <span class="text-gray-800">{{ capture.date | date:'short' }}</span>
+                  <span class="text-gray-800">{{ capture.formattedDate?.full || (capture.capturedAt | date:'short') }}</span>
                 </div>
               </td>
             </ng-container>
@@ -129,7 +161,24 @@ import flatpickr from 'flatpickr';
           </table>
         </div>
         
-        <mat-paginator [pageSizeOptions]="[10, 25, 50]" showFirstLastButtons class="mt-4"></mat-paginator>
+        <div *ngIf="totalItems > 0" class="mt-4">
+          <mat-paginator 
+            [length]="totalItems"
+            [pageSize]="pageSize"
+            [pageSizeOptions]="[10, 25, 50, 100]"
+            [pageIndex]="currentPage - 1"
+            showFirstLastButtons>
+          </mat-paginator>
+          <div class="text-sm text-gray-600 text-center mt-2">
+            Mostrando {{ getDisplayRange().start }} - {{ getDisplayRange().end }} de {{ totalItems }} capturas
+          </div>
+        </div>
+        
+        <div *ngIf="!isLoading && totalItems === 0" class="text-center py-12 text-gray-500">
+          <mat-icon class="text-6xl mb-4">inbox</mat-icon>
+          <p class="text-lg font-semibold">No se encontraron capturas</p>
+          <p class="text-sm">Intenta ajustar los filtros de búsqueda</p>
+        </div>
       </div>
     </div>
   `
@@ -147,25 +196,142 @@ export class CapturesComponent implements OnInit, AfterViewInit, OnDestroy {
   speciesFilter = '';
   rarityFilter = '';
   dateFilter: Date | null = null;
+  currentPage = 1;
+  totalItems = 0;
+  pageSize = 50;
   
-  species = ['Pikachu', 'Charizard', 'Blastoise', 'Venusaur', 'Mewtwo', 'Dragonite', 'Snorlax'];
+  species: string[] = [];
   rarities: RarityType[] = ['common', 'rare', 'epic', 'legend'];
-  
-  private mockCaptures: Capture[] = [
-    { id: '1', trainerName: 'Ash Ketchum', species: 'Pikachu', rarity: 'common', date: '2024-01-15T10:30:00Z' },
-    { id: '2', trainerName: 'Misty Waterflower', species: 'Charizard', rarity: 'rare', date: '2024-01-14T15:45:00Z' },
-    { id: '3', trainerName: 'Brock Harrison', species: 'Blastoise', rarity: 'epic', date: '2024-01-13T09:20:00Z' },
-    { id: '4', trainerName: 'Gary Oak', species: 'Mewtwo', rarity: 'legend', date: '2024-01-12T14:10:00Z' },
-    { id: '5', trainerName: 'Serena Yvonne', species: 'Dragonite', rarity: 'rare', date: '2024-01-11T11:55:00Z' },
-  ];
+  isLoading = false;
+  private destroy$ = new Subject<void>();
+
+  constructor(private adminService: AdminService) {}
 
   ngOnInit() {
-    this.dataSource.data = this.mockCaptures;
+    this.loadCaptures();
+  }
+  
+  loadCaptures() {
+    this.isLoading = true;
+    const params: any = {
+      page: this.currentPage,
+      perPage: this.pageSize
+    };
+    
+    // Si hay búsqueda de texto, incluirla
+    if (this.searchTerm && this.searchTerm.trim()) {
+      params.search = this.searchTerm.trim();
+    }
+    
+    // Filtrar por especie - usar búsqueda por nombre
+    if (this.speciesFilter && this.speciesFilter !== '') {
+      // Si hay búsqueda de texto, combinar con especie
+      if (this.searchTerm && this.searchTerm.trim()) {
+        // Combinar búsqueda con especie
+        params.search = `${this.searchTerm.trim()} ${this.speciesFilter}`;
+      } else {
+        // Solo buscar por especie
+        params.search = this.speciesFilter;
+      }
+    }
+    
+    // Filtrar por rareza
+    if (this.rarityFilter && this.rarityFilter !== '') {
+      // El backend podría usar "legendary" en lugar de "legend"
+      // Pero según el README, usa 'common', 'rare', 'epic', 'legend'
+      params.rarity = this.rarityFilter;
+    }
+    
+    // Filtrar por fecha
+    if (this.dateFilter) {
+      const dateStr = this.dateFilter.toISOString().split('T')[0];
+      params.dateFrom = dateStr;
+      params.dateTo = dateStr;
+    }
+    
+    this.adminService.getCaptureHistory(params).subscribe({
+      next: (response) => {
+        console.log('Captures response:', response);
+        this.dataSource.data = response.data;
+        this.totalItems = response.meta.total;
+        this.currentPage = response.meta.currentPage || this.currentPage;
+        this.pageSize = response.meta.perPage || this.pageSize;
+        
+        // Actualizar el paginator después de recibir los datos
+        // Usar setTimeout para asegurar que el paginator esté inicializado
+        setTimeout(() => {
+          if (this.paginator) {
+            this.paginator.length = this.totalItems;
+            this.paginator.pageIndex = this.currentPage - 1;
+            this.paginator.pageSize = this.pageSize;
+            console.log('Paginator updated:', {
+              length: this.paginator.length,
+              pageIndex: this.paginator.pageIndex,
+              pageSize: this.paginator.pageSize
+            });
+          }
+        }, 100);
+        
+        // Extraer especies únicas de TODOS los resultados para el filtro
+        // Esto requiere cargar todas las especies disponibles (mejor hacerlo en un endpoint separado)
+        // Por ahora, solo usamos las especies de los datos actuales
+        const uniqueSpecies = new Set<string>();
+        response.data.forEach(capture => {
+          uniqueSpecies.add(capture.pokemon.name);
+        });
+        // Mantener especies existentes y agregar nuevas
+        this.species = Array.from(new Set([...this.species, ...Array.from(uniqueSpecies)])).sort();
+        
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading captures:', error);
+        this.isLoading = false;
+        // Fallback a datos demo
+        this.loadDemoData();
+      }
+    });
+  }
+  
+  private loadDemoData() {
+    const mockCaptures: Capture[] = [
+      {
+        id: 1,
+        trainer: { id: 1, name: 'Ash Ketchum', email: 'ash@pokemon.com' },
+        pokemon: { id: 25, pokeapiId: 25, name: 'pikachu' },
+        rarity: 'common',
+        capturedAt: '2024-01-15T10:30:00Z'
+      },
+      {
+        id: 2,
+        trainer: { id: 2, name: 'Misty Waterflower', email: 'misty@pokemon.com' },
+        pokemon: { id: 6, pokeapiId: 6, name: 'charizard' },
+        rarity: 'rare',
+        capturedAt: '2024-01-14T15:45:00Z'
+      }
+    ];
+    this.dataSource.data = mockCaptures;
   }
 
   ngAfterViewInit() {
-    this.dataSource.paginator = this.paginator;
+    // NO configurar paginator en dataSource porque usamos paginación del servidor
     this.initializeFlatpickr();
+    
+    // Escuchar cambios de página
+    if (this.paginator) {
+      // Configurar valores iniciales
+      this.paginator.pageSize = this.pageSize;
+      this.paginator.pageIndex = this.currentPage - 1;
+      
+      // Suscribirse a cambios de página
+      this.paginator.page
+        .pipe(takeUntil(this.destroy$))
+        .subscribe((event) => {
+          this.currentPage = event.pageIndex + 1;
+          this.pageSize = event.pageSize;
+          this.loadCaptures();
+        });
+    }
   }
 
   private initializeFlatpickr() {
@@ -186,8 +352,13 @@ export class CapturesComponent implements OnInit, AfterViewInit, OnDestroy {
           }
         },
         onChange: (selectedDates, dateStr) => {
-          this.dateFilter = selectedDates.length > 0 ? selectedDates[0] : null;
-          this.applyFilter();
+          if (selectedDates.length > 0) {
+            this.dateFilter = selectedDates[0];
+          } else {
+            this.dateFilter = null;
+          }
+          this.currentPage = 1;
+          this.loadCaptures();
         },
         allowInput: false,
         clickOpens: true,
@@ -198,38 +369,41 @@ export class CapturesComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+    
     if (this.flatpickrInstance) {
       this.flatpickrInstance.destroy();
     }
   }
 
   applyFilter(): void {
-    let filteredData: Capture[] = [...this.mockCaptures];
+    this.currentPage = 1;
+    // Reset paginator si existe
+    if (this.paginator) {
+      this.paginator.pageIndex = 0;
+    }
+    this.loadCaptures();
+  }
+  
+  clearFilters(): void {
+    this.searchTerm = '';
+    this.speciesFilter = '';
+    this.rarityFilter = '';
+    this.dateFilter = null;
     
-    if (this.searchTerm) {
-      const term = this.searchTerm.toLowerCase();
-      filteredData = filteredData.filter((capture: Capture) => 
-        capture.trainerName.toLowerCase().includes(term) ||
-        capture.species.toLowerCase().includes(term)
-      );
+    // Limpiar el datepicker
+    if (this.flatpickrInstance) {
+      this.flatpickrInstance.clear();
     }
     
-    if (this.speciesFilter) {
-      filteredData = filteredData.filter((capture: Capture) => capture.species === this.speciesFilter);
-    }
-    
-    if (this.rarityFilter) {
-      filteredData = filteredData.filter((capture: Capture) => capture.rarity === this.rarityFilter);
-    }
-    
-    if (this.dateFilter) {
-      const filterDate = this.dateFilter.toISOString().split('T')[0];
-      filteredData = filteredData.filter((capture: Capture) => 
-        capture.date.split('T')[0] === filterDate
-      );
-    }
-    
-    this.dataSource.data = filteredData;
+    this.applyFilter();
+  }
+  
+  getDisplayRange(): { start: number; end: number } {
+    const start = this.totalItems > 0 ? ((this.currentPage - 1) * this.pageSize) + 1 : 0;
+    const end = Math.min(this.currentPage * this.pageSize, this.totalItems);
+    return { start, end };
   }
 
   exportCSV() {
@@ -237,10 +411,10 @@ export class CapturesComponent implements OnInit, AfterViewInit, OnDestroy {
     const csvContent = [
       headers.join(','),
       ...this.dataSource.data.map(capture => [
-        capture.trainerName,
-        capture.species,
+        capture.trainer.name,
+        capture.pokemon.name,
         capture.rarity,
-        new Date(capture.date).toLocaleDateString()
+        capture.formattedDate?.full || new Date(capture.capturedAt).toLocaleDateString()
       ].join(','))
     ].join('\n');
     

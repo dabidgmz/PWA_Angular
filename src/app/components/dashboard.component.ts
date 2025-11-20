@@ -3,13 +3,15 @@ import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
-import { UserService } from '../core/services/user.service';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { AdminService } from '../core/services/admin.service';
 import { PokemonIconComponent } from '../shared/components/pokemon-icon.component';
+import { ToastService } from '../core/services/toast.service';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatIconModule, MatListModule, PokemonIconComponent],
+  imports: [CommonModule, MatCardModule, MatIconModule, MatListModule, MatSnackBarModule, PokemonIconComponent],
   template: `
     <div class="space-y-8 fade-in">
       <!-- Header -->
@@ -18,6 +20,17 @@ import { PokemonIconComponent } from '../shared/components/pokemon-icon.componen
           Dashboard Pokémon
         </h1>
         <p class="text-gray-600 text-lg">Resumen del sistema PokeTrainer</p>
+      </div>
+      
+      <!-- Backend Warning -->
+      <div *ngIf="!isBackendAvailable" class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg mb-6">
+        <div class="flex items-center">
+          <mat-icon class="text-yellow-600 mr-3">warning</mat-icon>
+          <div>
+            <h3 class="text-yellow-800 font-semibold">Backend no disponible</h3>
+            <p class="text-yellow-700 text-sm">No se pudo conectar con el servidor. Mostrando datos de demostración. Asegúrate de que el backend esté corriendo en <code class="bg-yellow-100 px-2 py-1 rounded">http://localhost:3333</code></p>
+          </div>
+        </div>
       </div>
       
       <!-- Stats Cards -->
@@ -29,8 +42,10 @@ import { PokemonIconComponent } from '../shared/components/pokemon-icon.componen
               <h3 class="text-3xl font-bold text-red-800">{{ totalTrainers }}</h3>
               <p class="text-red-600 mt-1">Total Entrenadores</p>
               <div class="flex items-center mt-2">
-                <span class="text-sm text-green-600 font-medium">+12%</span>
-                <span class="text-sm text-red-500 ml-1">vs mes anterior</span>
+                <span class="text-sm font-medium" [class.text-green-600]="trainersChangePercent >= 0" [class.text-red-600]="trainersChangePercent < 0">
+                  {{ trainersChangePercent >= 0 ? '+' : '' }}{{ trainersChangePercent }}%
+                </span>
+                <span class="text-sm text-gray-500 ml-1">vs mes anterior</span>
               </div>
             </div>
             <div class="stat-icon w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center shadow-lg">
@@ -46,8 +61,10 @@ import { PokemonIconComponent } from '../shared/components/pokemon-icon.componen
               <h3 class="text-3xl font-bold text-green-800">{{ totalCaptures }}</h3>
               <p class="text-green-600 mt-1">Capturas Totales</p>
               <div class="flex items-center mt-2">
-                <span class="text-sm text-green-600 font-medium">+8%</span>
-                <span class="text-sm text-green-500 ml-1">vs mes anterior</span>
+                <span class="text-sm font-medium" [class.text-green-600]="capturesChangePercent >= 0" [class.text-red-600]="capturesChangePercent < 0">
+                  {{ capturesChangePercent >= 0 ? '+' : '' }}{{ capturesChangePercent }}%
+                </span>
+                <span class="text-sm text-gray-500 ml-1">vs mes anterior</span>
               </div>
             </div>
             <div class="stat-icon w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center shadow-lg">
@@ -63,8 +80,10 @@ import { PokemonIconComponent } from '../shared/components/pokemon-icon.componen
               <h3 class="text-3xl font-bold text-purple-800">{{ activeTrainers }}</h3>
               <p class="text-purple-600 mt-1">Entrenadores Activos</p>
               <div class="flex items-center mt-2">
-                <span class="text-sm text-green-600 font-medium">+15%</span>
-                <span class="text-sm text-purple-500 ml-1">vs mes anterior</span>
+                <span class="text-sm font-medium" [class.text-green-600]="activeTrainersChangePercent >= 0" [class.text-red-600]="activeTrainersChangePercent < 0">
+                  {{ activeTrainersChangePercent >= 0 ? '+' : '' }}{{ activeTrainersChangePercent }}%
+                </span>
+                <span class="text-sm text-gray-500 ml-1">vs mes anterior</span>
               </div>
             </div>
             <div class="stat-icon w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
@@ -91,7 +110,7 @@ import { PokemonIconComponent } from '../shared/components/pokemon-icon.componen
                 <mat-icon class="text-white text-xl">pets</mat-icon>
               </div>
               <div>
-                <h4 class="font-semibold text-gray-800">{{ species.name }}</h4>
+                <h4 class="font-semibold text-gray-800 capitalize">{{ species.name }}</h4>
                 <p class="text-sm text-gray-600">Especie Pokémon</p>
               </div>
             </div>
@@ -109,20 +128,80 @@ export class DashboardComponent implements OnInit {
   totalTrainers = 0;
   totalCaptures = 0;
   activeTrainers = 0;
-  topSpecies = [
-    { name: 'Pikachu', count: 45 },
-    { name: 'Charizard', count: 32 },
-    { name: 'Blastoise', count: 28 },
-    { name: 'Venusaur', count: 25 },
-    { name: 'Mewtwo', count: 12 }
-  ];
+  trainersChangePercent = 0;
+  capturesChangePercent = 0;
+  activeTrainersChangePercent = 0;
+  topSpecies: Array<{ name: string; count: number }> = [];
+  isLoading = true;
+  isBackendAvailable = true;
 
-  constructor(private userService: UserService) {}
+  constructor(
+    private adminService: AdminService,
+    private toastService: ToastService
+  ) {}
 
   ngOnInit() {
-    const trainers = this.userService.getTrainers();
-    this.totalTrainers = trainers.length;
-    this.activeTrainers = trainers.filter(t => !t.bannedUntil).length;
-    this.totalCaptures = trainers.reduce((sum, t) => sum + t.teamCount, 0);
+    this.loadStatistics();
+    this.loadTopSpecies();
+  }
+
+  loadStatistics() {
+    this.adminService.getStatistics().subscribe({
+      next: (stats) => {
+        this.totalTrainers = stats.trainers.current;
+        this.totalCaptures = stats.captures.current;
+        this.activeTrainers = stats.activeTrainers.current;
+        this.trainersChangePercent = stats.trainers.changePercent;
+        this.capturesChangePercent = stats.captures.changePercent;
+        this.activeTrainersChangePercent = stats.activeTrainers.changePercent;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading statistics:', error);
+        this.isLoading = false;
+        this.isBackendAvailable = false;
+        
+        // Si el backend no está disponible (status 0), mostrar mensaje y usar datos demo
+        if (error.status === 0) {
+          this.toastService.warning('Backend no disponible. Mostrando datos de demostración.');
+        } else {
+          this.toastService.error('Error al cargar estadísticas. Mostrando datos de demostración.');
+        }
+        
+        // Fallback a datos demo en caso de error
+        this.loadDemoData();
+      }
+    });
+  }
+
+  loadTopSpecies() {
+    this.adminService.getTopSpecies().subscribe({
+      next: (response) => {
+        this.topSpecies = response.data.map(species => ({
+          name: species.name,
+          count: species.count
+        }));
+      },
+      error: (error) => {
+        console.error('Error loading top species:', error);
+        // Fallback a datos demo
+        this.topSpecies = [
+          { name: 'pikachu', count: 45 },
+          { name: 'charizard', count: 32 },
+          { name: 'blastoise', count: 28 },
+          { name: 'venusaur', count: 25 },
+          { name: 'mewtwo', count: 12 }
+        ];
+      }
+    });
+  }
+
+  private loadDemoData() {
+    this.totalTrainers = 25;
+    this.totalCaptures = 4;
+    this.activeTrainers = 4;
+    this.trainersChangePercent = 12;
+    this.capturesChangePercent = 8;
+    this.activeTrainersChangePercent = 15;
   }
 }

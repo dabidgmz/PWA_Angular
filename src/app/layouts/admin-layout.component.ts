@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterOutlet, RouterModule } from '@angular/router';
+import { Router, RouterOutlet, RouterModule, ActivatedRoute } from '@angular/router';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,8 +8,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatMenuModule } from '@angular/material/menu';
 import { AuthService } from '../core/services/auth.service';
+import { AdminService, ProfessorProfile } from '../core/services/admin.service';
+import { NetworkService } from '../core/services/network.service';
 import { User } from '../core/models/auth';
-import { PokemonIconComponent } from '../shared/components/pokemon-icon.component';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { ToastService } from '../core/services/toast.service';
+import { OfflineComponent } from '../shared/components/offline.component';
 
 @Component({
   selector: 'app-admin-layout',
@@ -24,7 +29,7 @@ import { PokemonIconComponent } from '../shared/components/pokemon-icon.componen
     MatIconModule,
     MatListModule,
     MatMenuModule,
-    PokemonIconComponent
+    OfflineComponent
   ],
   template: `
     <mat-sidenav-container class="h-screen bg-gradient-to-br from-gray-50 to-blue-50">
@@ -112,13 +117,16 @@ import { PokemonIconComponent } from '../shared/components/pokemon-icon.componen
           <div class="flex-1"></div>
           
           <!-- User Menu -->
-          <div class="flex items-center space-x-4">
-            <div class="user-info hidden md:flex items-center space-x-3 bg-gray-50 rounded-full px-4 py-2">
-              <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center user-avatar">
-                <mat-icon class="text-white text-base">account_circle</mat-icon>
-              </div>
-              <span class="text-sm font-medium text-gray-700">{{ user?.name }}</span>
-            </div>
+              <div class="flex items-center space-x-4">
+                <div class="user-info hidden md:flex items-center space-x-3 bg-gray-50 rounded-full px-4 py-2">
+                  <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center user-avatar">
+                    <mat-icon class="text-white text-base">account_circle</mat-icon>
+                  </div>
+                  <div class="flex flex-col">
+                    <span class="text-sm font-medium text-gray-700">{{ professorProfile?.name || user?.name || 'Profesor' }}</span>
+                    <span class="text-xs text-gray-500">{{ professorProfile?.email || user?.email }}</span>
+                  </div>
+                </div>
             
             <button mat-icon-button [matMenuTriggerFor]="userMenu" class="bg-gray-50 rounded-full">
               <mat-icon class="text-gray-600 text-xl">more_vert</mat-icon>
@@ -135,7 +143,9 @@ import { PokemonIconComponent } from '../shared/components/pokemon-icon.componen
         
         <!-- Main Content -->
         <div class="main-content p-6 min-h-screen bg-gray-50">
-          <router-outlet></router-outlet>
+          <!-- Mostrar componente offline si no hay conexión y estamos en una ruta que la requiere -->
+          <app-offline *ngIf="!isOnline && requiresConnection"></app-offline>
+          <router-outlet *ngIf="isOnline || !requiresConnection"></router-outlet>
         </div>
       </mat-sidenav-content>
     </mat-sidenav-container>
@@ -283,27 +293,103 @@ import { PokemonIconComponent } from '../shared/components/pokemon-icon.componen
     }
   `]
 })
-export class AdminLayoutComponent implements OnInit {
-  user: User | null = {
-    id: 'demo-user',
-    email: 'demo@utt.edu.mx',
-    name: 'Profesor Oak',
-    role: 'prof_oak'
-  };
+export class AdminLayoutComponent implements OnInit, OnDestroy {
+  user: User | null = null;
+  professorProfile: ProfessorProfile | null = null;
+  isOnline = navigator.onLine;
+  requiresConnection = false;
+  private destroy$ = new Subject<void>();
 
   constructor(
     private authService: AuthService,
-    private router: Router
+    private adminService: AdminService,
+    private networkService: NetworkService,
+    private router: Router,
+    private route: ActivatedRoute,
+    private toastService: ToastService
   ) {}
 
   ngOnInit() {
-    // Usar usuario demo en lugar de obtenerlo del servicio
-    // this.user = this.authService.getUser();
+    // Verificar si la ruta actual requiere conexión
+    this.checkIfRequiresConnection();
+    
+    // Suscribirse a cambios de ruta
+    this.router.events
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.checkIfRequiresConnection();
+      });
+    
+    // Suscribirse a cambios de conexión
+    this.networkService.onlineStatus$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(isOnline => {
+        this.isOnline = isOnline;
+        
+        if (!isOnline && this.requiresConnection) {
+          this.toastService.warning('Sin conexión a internet. Algunas funciones no estarán disponibles.');
+        }
+      });
+    
+    // Suscribirse a cambios del usuario autenticado
+    this.authService.user$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(user => {
+        this.user = user;
+        
+        if (!user) {
+          this.router.navigate(['/login']);
+        } else {
+          // Si es profesor, cargar el perfil completo
+          if (user.role === 'profesor' || user.role === 'professor') {
+            this.loadProfessorProfile();
+          }
+        }
+      });
+  }
+  
+  private checkIfRequiresConnection(): void {
+    const currentUrl = this.router.url;
+    // Rutas que requieren conexión a internet
+    const routesRequiringConnection = ['/dashboard', '/trainers', '/captures', '/qr-manager'];
+    this.requiresConnection = routesRequiringConnection.some(route => currentUrl.startsWith(route));
+  }
+
+  loadProfessorProfile() {
+    this.adminService.getProfessorProfile()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (profile) => {
+          this.professorProfile = profile;
+          // Actualizar el usuario con los datos completos del perfil
+          if (this.user) {
+            this.user = {
+              ...this.user,
+              id: profile.id,
+              name: profile.name,
+              email: profile.email,
+              role: profile.role
+            };
+          }
+        },
+        error: (error) => {
+          console.error('Error loading professor profile:', error);
+          // Si hay error, usar los datos del usuario autenticado
+          if (error.status === 0) {
+            // Backend no disponible, usar datos locales
+            this.toastService.warning('No se pudo cargar el perfil completo del profesor');
+          }
+        }
+      });
   }
 
   logout() {
-    // Para demo, solo navegar al login sin limpiar datos
-    this.router.navigateByUrl('/auth/login');
-    // this.authService.logout();
+    this.authService.logout();
+    this.router.navigate(['/login']);
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

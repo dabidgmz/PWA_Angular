@@ -1,12 +1,14 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { User } from '../models/auth';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable, tap, catchError, throwError } from 'rxjs';
+import { User, AuthResponse, LoginRequest, RegisterRequest } from '../models/auth';
 import { storage } from '../utils/storage';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
+  private readonly API_URL = 'http://localhost:3333';
   private readonly USER_KEY = 'pokemon_user';
   private readonly TOKEN_KEY = 'pokemon_token';
   private userSubject = new BehaviorSubject<User | null>(null);
@@ -15,7 +17,7 @@ export class AuthService {
   public user$ = this.userSubject.asObservable();
   public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
 
-  constructor() {
+  constructor(private http: HttpClient) {
     this.loadUserFromStorage();
   }
 
@@ -27,27 +29,38 @@ export class AuthService {
     return this.isAuthenticatedSubject.value;
   }
 
+  getToken(): string | null {
+    return storage.get<string>(this.TOKEN_KEY);
+  }
+
   getUser(): User | null {
     return this.user;
   }
 
-  login(email: string, password: string): Observable<boolean> {
-    // Simulación de login para demo
-    const demoUser: User = {
-      id: 'demo-user',
-      email: email,
-      name: 'Profesor Oak',
-      role: 'prof_oak'
-    };
+  login(email: string, password: string): Observable<AuthResponse> {
+    const loginData: LoginRequest = { email, password };
+    
+    return this.http.post<AuthResponse>(`${this.API_URL}/auth/login`, loginData).pipe(
+      tap((response) => {
+        this.setUser(response.user, response.token);
+      }),
+      catchError((error) => {
+        return throwError(() => error);
+      })
+    );
+  }
 
-    const token = 'demo-token-' + Date.now();
+  register(data: RegisterRequest): Observable<any> {
+    return this.http.post(`${this.API_URL}/auth/register`, data).pipe(
+      catchError((error) => {
+        return throwError(() => error);
+      })
+    );
+  }
 
-    this.setUser(demoUser, token);
-    return new Observable(observer => {
-      setTimeout(() => {
-        observer.next(true);
-        observer.complete();
-      }, 1000);
+  verifyEmail(token: string): Observable<any> {
+    return this.http.get(`${this.API_URL}/auth/verify`, {
+      params: { token }
     });
   }
 
@@ -76,7 +89,15 @@ export class AuthService {
   }
 
   hasRole(role: string): boolean {
-    return this.user?.role === role;
+    return this.user?.role === role || this.user?.role === 'profesor' || this.user?.role === 'professor';
+  }
+
+  isProfessor(): boolean {
+    return this.hasRole('profesor') || this.hasRole('professor');
+  }
+
+  isTrainer(): boolean {
+    return this.user?.role === 'trainer';
   }
 
   updateUser(userData: Partial<User>): void {
