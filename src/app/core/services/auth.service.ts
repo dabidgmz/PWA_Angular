@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap, catchError, throwError } from 'rxjs';
-import { User, AuthResponse, LoginRequest, RegisterRequest, VerifyCodeRequest, VerifyCodeResponse } from '../models/auth';
+import { User, AuthResponse, LoginRequest, RegisterRequest, VerifyCodeRequest, VerifyCodeResponse, ResendCodeRequest, ResendCodeResponse } from '../models/auth';
 import { storage } from '../utils/storage';
 
 @Injectable({
@@ -60,6 +60,16 @@ export class AuthService {
       tap((response) => {
         this.setUser(response.user, response.token);
       }),
+      catchError((error) => {
+        return throwError(() => error);
+      })
+    );
+  }
+
+  resendCode(email: string): Observable<ResendCodeResponse> {
+    const resendData: ResendCodeRequest = { email };
+    
+    return this.http.post<ResendCodeResponse>(`${this.API_URL}/auth/resend-code`, resendData).pipe(
       catchError((error) => {
         return throwError(() => error);
       })

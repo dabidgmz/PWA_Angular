@@ -242,11 +242,55 @@ export class VerifyCodeComponent implements OnInit {
   }
 
   resendCode() {
-    // Para reenviar el código, necesitamos la contraseña
-    // Por ahora, redirigimos al login para que el usuario inicie sesión nuevamente
-    this.toastService.info('Por favor, inicia sesión nuevamente para recibir un nuevo código');
-    this.router.navigate(['/login'], {
-      queryParams: { email: this.email }
+    if (!this.email) {
+      this.toastService.error('Email no encontrado. Por favor, inicia sesión nuevamente.');
+      this.router.navigate(['/login']);
+      return;
+    }
+
+    this.isResending = true;
+    this.hasError = false;
+
+    // Resetear el OTP input
+    if (this.otpInput) {
+      this.otpInput.reset();
+    }
+
+    this.authService.resendCode(this.email).subscribe({
+      next: (response) => {
+        this.isResending = false;
+        this.toastService.success(`Código reenviado exitosamente. ${response.expiresIn ? `Expira en ${response.expiresIn}` : 'Revisa tu email.'}`);
+        
+        Swal.fire({
+          title: '¡Código Reenviado!',
+          text: response.message || 'Se ha enviado un nuevo código de verificación a tu email.',
+          icon: 'success',
+          confirmButtonColor: '#3b82f6',
+          customClass: {
+            popup: 'rounded-2xl',
+            confirmButton: 'rounded-lg'
+          }
+        });
+      },
+      error: (error) => {
+        this.isResending = false;
+        const errorMessage = error.error?.message || 'Error al reenviar el código. Intenta nuevamente.';
+        this.toastService.error(errorMessage);
+        
+        // Si el error es 401 o 403, puede ser que el email no sea válido o no sea profesor
+        if (error.status === 401 || error.status === 403) {
+          Swal.fire({
+            title: 'Error al reenviar código',
+            text: errorMessage,
+            icon: 'error',
+            confirmButtonColor: '#ef4444',
+            customClass: {
+              popup: 'rounded-2xl',
+              confirmButton: 'rounded-lg'
+            }
+          });
+        }
+      }
     });
   }
 

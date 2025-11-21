@@ -41,6 +41,15 @@ export interface VerifyCodeResponse {
   user: User;
 }
 
+export interface ResendCodeRequest {
+  email: string;
+}
+
+export interface ResendCodeResponse {
+  message: string;
+  expiresIn: string;
+}
+
 export interface RegisterResponse {
   userId: number;
   message: string;
