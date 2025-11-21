@@ -23,33 +23,58 @@ import { ToastService } from '../core/services/toast.service';
     MatCardModule
   ],
   template: `
-    <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-4">
-      <div class="w-full max-w-md">
+    <div class="login-container min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      <!-- Animated Background -->
+      <div class="absolute inset-0 bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 opacity-90">
+        <div class="absolute inset-0 pattern-overlay opacity-20"></div>
+      </div>
+      
+      <!-- Floating Pokeballs -->
+      <div class="absolute top-20 left-10 w-16 h-16 opacity-20 animate-float">
+        <div class="w-full h-full bg-white rounded-full border-4 border-black flex items-center justify-center">
+          <div class="w-8 h-8 bg-white rounded-full border-2 border-black"></div>
+        </div>
+      </div>
+      <div class="absolute bottom-20 right-10 w-12 h-12 opacity-20 animate-float-delayed">
+        <div class="w-full h-full bg-white rounded-full border-4 border-black flex items-center justify-center">
+          <div class="w-6 h-6 bg-white rounded-full border-2 border-black"></div>
+        </div>
+      </div>
+      
+      <div class="w-full max-w-md relative z-10">
         <!-- Logo Section -->
-        <div class="text-center mb-8">
-          <div class="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <mat-icon class="text-white text-4xl">biotech</mat-icon>
+        <div class="text-center mb-10 animate-fade-in">
+          <div class="w-28 h-28 bg-gradient-to-br from-blue-500 via-purple-600 to-pink-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl transform hover:scale-105 transition-transform duration-300 relative">
+            <div class="absolute inset-0 bg-gradient-to-br from-blue-400 to-purple-500 rounded-3xl blur-xl opacity-50"></div>
+            <mat-icon class="text-white text-5xl relative z-10">biotech</mat-icon>
           </div>
-          <h1 class="text-3xl font-bold text-gray-800 mb-2">Profesor Oak</h1>
-          <p class="text-gray-600">Panel de Administración Pokémon</p>
+          <h1 class="text-4xl font-bold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent mb-3 drop-shadow-lg">
+            Profesor Oak
+          </h1>
+          <p class="text-white text-lg font-medium opacity-90">Panel de Administración Pokémon</p>
         </div>
 
         <!-- Login Card -->
-        <div class="bg-white rounded-2xl shadow-2xl p-8 border border-gray-100">
-          <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Iniciar Sesión</h2>
+        <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-10 border border-white/20 animate-slide-up">
+          <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+              Iniciar Sesión
+            </h2>
+            <p class="text-gray-600">Ingresa tus credenciales para continuar</p>
+          </div>
           
           <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-6">
             <mat-form-field appearance="outline" class="w-full">
-              <mat-label>Email</mat-label>
+              <mat-label class="text-gray-700 font-medium">Email</mat-label>
               <input 
                 matInput 
                 type="email" 
                 formControlName="email" 
                 placeholder="professor@pokemon.com"
                 autocomplete="email"
-                class="text-gray-800"
+                class="text-gray-800 text-lg"
               >
-              <mat-icon matPrefix class="text-gray-400 mr-2">email</mat-icon>
+              <mat-icon matPrefix class="text-blue-500 mr-3 text-xl">email</mat-icon>
               <mat-error *ngIf="loginForm.get('email')?.hasError('required')">
                 El email es requerido
               </mat-error>
@@ -59,16 +84,16 @@ import { ToastService } from '../core/services/toast.service';
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="w-full">
-              <mat-label>Contraseña</mat-label>
+              <mat-label class="text-gray-700 font-medium">Contraseña</mat-label>
               <input 
                 matInput 
                 [type]="hidePassword ? 'password' : 'text'" 
                 formControlName="password" 
                 placeholder="••••••••"
                 autocomplete="current-password"
-                class="text-gray-800"
+                class="text-gray-800 text-lg"
               >
-              <mat-icon matPrefix class="text-gray-400 mr-2">lock</mat-icon>
+              <mat-icon matPrefix class="text-purple-500 mr-3 text-xl">lock</mat-icon>
               <button 
                 mat-icon-button 
                 matSuffix 
@@ -76,6 +101,7 @@ import { ToastService } from '../core/services/toast.service';
                 (click)="hidePassword = !hidePassword"
                 [attr.aria-label]="'Hide password'"
                 [attr.aria-pressed]="hidePassword"
+                class="text-gray-500 hover:text-blue-600 transition-colors"
               >
                 <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
               </button>
@@ -84,42 +110,146 @@ import { ToastService } from '../core/services/toast.service';
               </mat-error>
             </mat-form-field>
 
-            <div *ngIf="errorMessage" class="bg-red-50 border border-red-200 rounded-lg p-4">
-              <div class="flex items-center space-x-2">
+            <div *ngIf="errorMessage" class="bg-red-50 border-l-4 border-red-500 rounded-lg p-4 animate-shake">
+              <div class="flex items-center space-x-3">
                 <mat-icon class="text-red-500">error</mat-icon>
-                <p class="text-red-700 text-sm">{{ errorMessage }}</p>
+                <p class="text-red-700 text-sm font-medium">{{ errorMessage }}</p>
               </div>
             </div>
 
             <button 
               mat-raised-button 
               type="submit"
-              class="w-full pokemon-btn text-lg py-3"
+              class="w-full login-button text-lg py-4 rounded-xl font-semibold shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
               [disabled]="loginForm.invalid || isLoading"
             >
-              <mat-icon *ngIf="!isLoading" class="mr-2">login</mat-icon>
-              <span *ngIf="isLoading" class="mr-2">Cargando...</span>
-              <span *ngIf="!isLoading">Iniciar Sesión</span>
+              <span *ngIf="isLoading" class="flex items-center justify-center">
+                <mat-icon class="animate-spin mr-2">refresh</mat-icon>
+                Iniciando sesión...
+              </span>
+              <span *ngIf="!isLoading" class="flex items-center justify-center">
+                <mat-icon class="mr-2">login</mat-icon>
+                Iniciar Sesión
+              </span>
             </button>
           </form>
-
-          <!-- Demo Credentials -->
-          <div class="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
-            <p class="text-xs font-semibold text-blue-800 mb-2">Credenciales de Demo:</p>
-            <div class="text-xs text-blue-700 space-y-1">
-              <p><strong>Profesor:</strong> professor&#64;pokemon.com / professor123</p>
-              <p><strong>Trainer:</strong> ash&#64;pokemon.com / ash123</p>
-            </div>
-          </div>
         </div>
 
         <!-- Footer -->
-        <p class="text-center text-gray-500 text-sm mt-6">
+        <p class="text-center text-white/80 text-sm mt-8 font-medium">
           Sistema de Gestión Pokémon © 2024
         </p>
       </div>
     </div>
-  `
+  `,
+  styles: [`
+    .login-container {
+      position: relative;
+    }
+    
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+      }
+      50% {
+        transform: translateY(-20px) rotate(180deg);
+      }
+    }
+    
+    @keyframes float-delayed {
+      0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+      }
+      50% {
+        transform: translateY(-15px) rotate(-180deg);
+      }
+    }
+    
+    @keyframes fade-in {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes slide-up {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+      20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+    
+    .animate-float {
+      animation: float 6s ease-in-out infinite;
+    }
+    
+    .animate-float-delayed {
+      animation: float-delayed 8s ease-in-out infinite;
+    }
+    
+    .animate-fade-in {
+      animation: fade-in 0.8s ease-out;
+    }
+    
+    .animate-slide-up {
+      animation: slide-up 0.6s ease-out;
+    }
+    
+    .animate-shake {
+      animation: shake 0.5s ease-in-out;
+    }
+    
+    .pattern-overlay {
+      background-image: 
+        radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0);
+      background-size: 20px 20px;
+    }
+    
+    .login-button {
+      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%) !important;
+      color: white !important;
+      border: none !important;
+    }
+    
+    .login-button:hover:not(:disabled) {
+      background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%) !important;
+      box-shadow: 0 20px 40px rgba(59, 130, 246, 0.4) !important;
+    }
+    
+    .login-button:disabled {
+      background: #9ca3af !important;
+    }
+    
+    ::ng-deep .mat-mdc-form-field {
+      .mat-mdc-text-field-wrapper {
+        background-color: rgba(249, 250, 251, 0.8);
+        border-radius: 12px;
+      }
+      
+      .mat-mdc-form-field-focus-overlay {
+        background-color: transparent;
+      }
+      
+      &.mat-focused .mat-mdc-text-field-wrapper {
+        background-color: white;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+    }
+  `]
 })
 export class LoginComponent {
   loginForm: FormGroup;
@@ -149,13 +279,24 @@ export class LoginComponent {
       this.authService.login(email, password).subscribe({
         next: (response) => {
           this.isLoading = false;
-          this.toastService.success(`Bienvenido, ${response.user.name}`);
           
-          // Redirigir según el rol
-          if (response.user.role === 'profesor' || response.user.role === 'professor') {
-            this.router.navigate(['/dashboard']);
-          } else {
-            this.router.navigate(['/dashboard']);
+          // Si requiere código de verificación, redirigir a la página de verificación
+          if (response.requiresCode) {
+            this.toastService.info('Código de verificación enviado a tu email');
+            this.router.navigate(['/verify-code'], {
+              queryParams: { email: email },
+              state: { email: email }
+            });
+          } else if (response.token) {
+            // Si no requiere código, login directo
+            this.toastService.success(`Bienvenido, ${response.user.name}`);
+            
+            // Redirigir según el rol
+            if (response.user.role === 'profesor' || response.user.role === 'professor') {
+              this.router.navigate(['/dashboard']);
+            } else {
+              this.router.navigate(['/dashboard']);
+            }
           }
         },
         error: (error) => {

@@ -23,7 +23,21 @@ export interface RegisterRequest {
 }
 
 export interface AuthResponse {
+  token?: string;
+  message?: string;
+  requiresCode?: boolean;
+  user: User;
+}
+
+export interface VerifyCodeRequest {
+  email: string;
+  code: string;
+}
+
+export interface VerifyCodeResponse {
+  type: string;
   token: string;
+  message: string;
   user: User;
 }
 

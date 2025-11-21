@@ -6,7 +6,6 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
-import { MatMenuModule } from '@angular/material/menu';
 import { AuthService } from '../core/services/auth.service';
 import { AdminService, ProfessorProfile } from '../core/services/admin.service';
 import { NetworkService } from '../core/services/network.service';
@@ -28,7 +27,6 @@ import { OfflineComponent } from '../shared/components/offline.component';
     MatButtonModule,
     MatIconModule,
     MatListModule,
-    MatMenuModule,
     OfflineComponent
   ],
   template: `
@@ -116,28 +114,17 @@ import { OfflineComponent } from '../shared/components/offline.component';
           
           <div class="flex-1"></div>
           
-          <!-- User Menu -->
-              <div class="flex items-center space-x-4">
-                <div class="user-info hidden md:flex items-center space-x-3 bg-gray-50 rounded-full px-4 py-2">
-                  <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center user-avatar">
-                    <mat-icon class="text-white text-base">account_circle</mat-icon>
-                  </div>
-                  <div class="flex flex-col">
-                    <span class="text-sm font-medium text-gray-700">{{ professorProfile?.name || user?.name || 'Profesor' }}</span>
-                    <span class="text-xs text-gray-500">{{ professorProfile?.email || user?.email }}</span>
-                  </div>
-                </div>
-            
-            <button mat-icon-button [matMenuTriggerFor]="userMenu" class="bg-gray-50 rounded-full">
-              <mat-icon class="text-gray-600 text-xl">more_vert</mat-icon>
-            </button>
-            
-            <mat-menu #userMenu="matMenu" class="rounded-xl">
-              <button mat-menu-item (click)="logout()" class="rounded-lg">
-                <mat-icon class="text-red-500 text-xl">exit_to_app</mat-icon>
-                <span class="ml-2">Salir</span>
-              </button>
-            </mat-menu>
+          <!-- User Info -->
+          <div class="flex items-center space-x-4">
+            <div class="user-info hidden md:flex items-center space-x-3 bg-gray-50 rounded-full px-4 py-2">
+              <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center user-avatar">
+                <mat-icon class="text-white text-base">account_circle</mat-icon>
+              </div>
+              <div class="flex flex-col">
+                <span class="text-sm font-medium text-gray-700">{{ professorProfile?.name || user?.name || 'Profesor' }}</span>
+                <span class="text-xs text-gray-500">{{ professorProfile?.email || user?.email }}</span>
+              </div>
+            </div>
           </div>
         </mat-toolbar>
         
@@ -383,10 +370,6 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
       });
   }
 
-  logout() {
-    this.authService.logout();
-    this.router.navigate(['/login']);
-  }
 
   ngOnDestroy() {
     this.destroy$.next();

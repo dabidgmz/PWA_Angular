@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap, catchError, throwError } from 'rxjs';
-import { User, AuthResponse, LoginRequest, RegisterRequest } from '../models/auth';
+import { User, AuthResponse, LoginRequest, RegisterRequest, VerifyCodeRequest, VerifyCodeResponse } from '../models/auth';
 import { storage } from '../utils/storage';
 
 @Injectable({
@@ -41,6 +41,22 @@ export class AuthService {
     const loginData: LoginRequest = { email, password };
     
     return this.http.post<AuthResponse>(`${this.API_URL}/auth/login`, loginData).pipe(
+      tap((response) => {
+        // Solo guardar usuario y token si no requiere código
+        if (!response.requiresCode && response.token) {
+          this.setUser(response.user, response.token);
+        }
+      }),
+      catchError((error) => {
+        return throwError(() => error);
+      })
+    );
+  }
+
+  verifyCode(email: string, code: string): Observable<VerifyCodeResponse> {
+    const verifyData: VerifyCodeRequest = { email, code };
+    
+    return this.http.post<VerifyCodeResponse>(`${this.API_URL}/auth/verify-code`, verifyData).pipe(
       tap((response) => {
         this.setUser(response.user, response.token);
       }),

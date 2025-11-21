@@ -6,6 +6,7 @@ import { QrManagerComponent } from './components/qr-manager.component';
 import { CapturesComponent } from './components/captures.component';
 import { SettingsComponent } from './components/settings.component';
 import { LoginComponent } from './auth/login.component';
+import { VerifyCodeComponent } from './auth/verify-code.component';
 import { AuthGuard } from './core/guards/auth.guard';
 import { ProfessorGuard } from './core/guards/professor.guard';
 
@@ -13,6 +14,10 @@ export const routes: Routes = [
   { 
     path: 'login', 
     component: LoginComponent
+  },
+  {
+    path: 'verify-code',
+    component: VerifyCodeComponent
   },
   { 
     path: '', 

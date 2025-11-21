@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -10,6 +10,11 @@ import { MatSelectModule } from '@angular/material/select';
 import { ToastService } from '../core/services/toast.service';
 import { AdminService, ProfessorProfile, UpdateProfessorProfileRequest } from '../core/services/admin.service';
 import { AuthService } from '../core/services/auth.service';
+import { NetworkService } from '../core/services/network.service';
+import { Router } from '@angular/router';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-settings',
@@ -109,6 +114,7 @@ import { AuthService } from '../core/services/auth.service';
                 </p>
               </div>
               <button 
+                *ngIf="isOnline"
                 mat-raised-button 
                 type="submit"
                 class="pokemon-btn"
@@ -117,6 +123,11 @@ import { AuthService } from '../core/services/auth.service';
                 <span *ngIf="!isUpdatingProfile">Guardar Cambios</span>
                 <span *ngIf="isUpdatingProfile">Guardando...</span>
               </button>
+              
+              <div *ngIf="!isOnline" class="flex items-center space-x-2 text-gray-500 text-sm">
+                <mat-icon class="text-sm">cloud_off</mat-icon>
+                <span>Requiere conexión a internet</span>
+              </div>
               
               <button 
                 *ngIf="profileForm.dirty"
@@ -141,20 +152,62 @@ import { AuthService } from '../core/services/auth.service';
           <p class="text-gray-600">Cargando perfil...</p>
         </div>
       </div>
+      
+      <!-- Logout Section -->
+      <div *ngIf="isOnline" class="glass-card p-6 mt-8">
+        <div class="flex items-center space-x-3 mb-6">
+          <div class="w-10 h-10 bg-gradient-to-r from-red-500 to-orange-500 rounded-full flex items-center justify-center">
+            <mat-icon class="text-white">logout</mat-icon>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-800">Cerrar Sesión</h3>
+        </div>
+        
+        <div class="flex items-center justify-between p-4 bg-white bg-opacity-50 rounded-xl">
+          <div class="flex items-center space-x-4">
+            <mat-icon class="text-red-500">exit_to_app</mat-icon>
+            <div>
+              <h4 class="font-medium text-gray-800">Cerrar Sesión</h4>
+              <p class="text-sm text-gray-600">Salir de tu cuenta de profesor</p>
+            </div>
+          </div>
+          <button 
+            mat-raised-button 
+            class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-full"
+            (click)="logout()">
+            <mat-icon class="mr-2">exit_to_app</mat-icon>
+            Cerrar Sesión
+          </button>
+        </div>
+      </div>
+      
+      <!-- Offline Message -->
+      <div *ngIf="!isOnline" class="glass-card p-6 mt-8 bg-yellow-50 border-l-4 border-yellow-400">
+        <div class="flex items-center space-x-3">
+          <mat-icon class="text-yellow-600">cloud_off</mat-icon>
+          <div>
+            <h4 class="font-medium text-yellow-800">Sin conexión a internet</h4>
+            <p class="text-sm text-yellow-700">Algunas funciones están deshabilitadas. Conecta a internet para guardar cambios o cerrar sesión.</p>
+          </div>
+        </div>
+      </div>
     </div>
   `
 })
-export class SettingsComponent implements OnInit {
+export class SettingsComponent implements OnInit, OnDestroy {
   professorProfile: ProfessorProfile | null = null;
   profileForm: FormGroup;
   isLoadingProfile = false;
   isUpdatingProfile = false;
+  isOnline = true;
+  private destroy$ = new Subject<void>();
 
   constructor(
     private fb: FormBuilder,
     private toastService: ToastService,
     private adminService: AdminService,
-    private authService: AuthService
+    private authService: AuthService,
+    private networkService: NetworkService,
+    private router: Router
   ) {
     this.profileForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3)]],
@@ -165,8 +218,23 @@ export class SettingsComponent implements OnInit {
   }
 
   ngOnInit() {
+    // Suscribirse al estado de la red
+    this.networkService.onlineStatus$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(status => {
+        this.isOnline = status;
+        if (!status) {
+          this.toastService.warning('Sin conexión a internet. Algunas funciones están deshabilitadas.');
+        }
+      });
+    
     // Cargar perfil del profesor
     this.loadProfessorProfile();
+  }
+  
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
   
   loadProfessorProfile() {
@@ -241,6 +309,11 @@ export class SettingsComponent implements OnInit {
   }
   
   updateProfile() {
+    if (!this.isOnline) {
+      this.toastService.error('No hay conexión a internet. No se pueden guardar los cambios.');
+      return;
+    }
+    
     if (this.profileForm.valid && this.professorProfile) {
       this.isUpdatingProfile = true;
       const updateData: UpdateProfessorProfileRequest = {
@@ -321,5 +394,40 @@ export class SettingsComponent implements OnInit {
     } catch (error) {
       console.error('Error saving profile to cache:', error);
     }
+  }
+  
+  logout() {
+    Swal.fire({
+      title: '¿Estás seguro?',
+      text: '¿Estás seguro de que quieres cerrar sesión?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Sí, cerrar sesión',
+      cancelButtonText: 'Cancelar',
+      reverseButtons: true,
+      customClass: {
+        popup: 'rounded-2xl',
+        confirmButton: 'rounded-lg',
+        cancelButton: 'rounded-lg'
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.authService.logout();
+        Swal.fire({
+          title: 'Sesión cerrada',
+          text: 'Has cerrado sesión correctamente',
+          icon: 'success',
+          confirmButtonColor: '#3b82f6',
+          customClass: {
+            popup: 'rounded-2xl',
+            confirmButton: 'rounded-lg'
+          }
+        }).then(() => {
+          this.router.navigate(['/login']);
+        });
+      }
+    });
   }
 }
