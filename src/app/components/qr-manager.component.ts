@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -8,7 +9,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatGridListModule } from '@angular/material/grid-list';
-import { Rarity } from '../core/models/capture';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { firstValueFrom } from 'rxjs';
+import { QRManagerService, QRPokemon } from '../core/services/qr-manager.service';
 import * as QRCode from 'qrcode';
 import jsPDF from 'jspdf';
 
@@ -24,7 +27,8 @@ import jsPDF from 'jspdf';
     MatButtonModule,
     MatIconModule,
     MatCardModule,
-    MatGridListModule
+    MatGridListModule,
+    MatProgressSpinnerModule
   ],
   template: `
     <div class="space-y-8 fade-in">
@@ -62,6 +66,7 @@ import jsPDF from 'jspdf';
             <mat-form-field appearance="outline">
               <mat-label>Rareza</mat-label>
               <mat-select formControlName="rarity">
+                <mat-option value="">Todas</mat-option>
                 <mat-option value="common">Común</mat-option>
                 <mat-option value="rare">Raro</mat-option>
                 <mat-option value="epic">Épico</mat-option>
@@ -74,12 +79,26 @@ import jsPDF from 'jspdf';
             mat-raised-button 
             type="submit"
             class="pokemon-btn text-lg py-3"
-            [disabled]="qrForm.invalid"
+            [disabled]="qrForm.invalid || isLoading"
           >
-            <mat-icon class="mr-2">qr_code</mat-icon>
-            Generar Códigos QR
+            <span *ngIf="isLoading" class="flex items-center">
+              <mat-spinner diameter="20" class="mr-2 inline-block"></mat-spinner>
+              Generando...
+            </span>
+            <span *ngIf="!isLoading" class="flex items-center">
+              <mat-icon class="mr-2">qr_code</mat-icon>
+              Generar Códigos QR
+            </span>
           </button>
         </form>
+      </div>
+      
+      <!-- Error Message -->
+      <div *ngIf="errorMessage" class="glass-card p-4 bg-red-50 border border-red-200">
+        <div class="flex items-center space-x-2 text-red-600">
+          <mat-icon>error</mat-icon>
+          <span>{{ errorMessage }}</span>
+        </div>
       </div>
       
       <!-- Generated QR Codes -->
@@ -118,34 +137,100 @@ import jsPDF from 'jspdf';
     </div>
   `
 })
-export class QrManagerComponent {
+export class QrManagerComponent implements OnInit {
   qrForm: FormGroup;
   generatedQRs: any[] = [];
+  isLoading = false;
+  errorMessage: string | null = null;
 
-  constructor(private fb: FormBuilder) {
+  constructor(
+    private fb: FormBuilder,
+    private qrManagerService: QRManagerService,
+    private route: ActivatedRoute,
+    private router: Router
+  ) {
     this.qrForm = this.fb.group({
       minId: [1, [Validators.required, Validators.min(1)]],
       maxId: [151, [Validators.required, Validators.min(1)]],
-      rarity: ['common', Validators.required]
+      rarity: ['']
+    });
+  }
+
+  ngOnInit() {
+    // Leer query params de la URL
+    this.route.queryParams.subscribe(params => {
+      const minId = params['minId'] ? parseInt(params['minId'], 10) : null;
+      const maxId = params['maxId'] ? parseInt(params['maxId'], 10) : null;
+      const rarity = params['rarity'] || '';
+
+      // Si hay query params (al menos minId o maxId), actualizar el formulario y generar QR
+      const hasQueryParams = minId !== null || maxId !== null || (rarity && rarity !== '');
+      
+      if (hasQueryParams) {
+        // Actualizar formulario con los valores de query params
+        const formValues: any = {};
+        if (minId !== null) {
+          formValues.minId = minId;
+        }
+        if (maxId !== null) {
+          formValues.maxId = maxId;
+        }
+        if (rarity && rarity !== '') {
+          formValues.rarity = rarity;
+        }
+        this.qrForm.patchValue(formValues);
+
+        // Generar QR automáticamente con los parámetros de la URL
+        const finalMinId = minId || this.qrForm.value.minId || 1;
+        const finalMaxId = maxId || this.qrForm.value.maxId || 151;
+        const finalRarity = rarity && rarity !== '' ? rarity : undefined;
+        
+        this.generateQRsFromBackend(finalMinId, finalMaxId, finalRarity);
+      }
     });
   }
 
   async generateQRs() {
     if (this.qrForm.valid) {
       const { minId, maxId, rarity } = this.qrForm.value;
-      this.generatedQRs = [];
       
-      for (let id = minId; id <= maxId; id++) {
-        const pokemonData = {
-          id,
-          name: `Pokémon ${id}`,
-          rarity,
-          timestamp: new Date().toISOString()
-        };
-        
+      // Actualizar URL con los parámetros del formulario
+      const queryParams: any = { minId, maxId };
+      if (rarity && rarity !== '') {
+        queryParams.rarity = rarity;
+      }
+      
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams,
+        queryParamsHandling: 'merge'
+      });
+
+      // Generar QR desde el backend
+      await this.generateQRsFromBackend(minId, maxId, rarity || undefined);
+    }
+  }
+
+  private async generateQRsFromBackend(minId: number, maxId: number, rarity?: string) {
+    this.isLoading = true;
+    this.errorMessage = null;
+    this.generatedQRs = [];
+
+    try {
+      // Llamar al backend
+      const response = await firstValueFrom(
+        this.qrManagerService.getQRPokemons(minId, maxId, rarity)
+      );
+      
+      if (!response || !response.pokemons) {
+        throw new Error('Respuesta inválida del servidor');
+      }
+
+      // Generar QR codes para cada Pokémon
+      for (const pokemon of response.pokemons) {
         try {
           // Generate QR code data URL
-          const qrCodeDataUrl = await QRCode.toDataURL(JSON.stringify(pokemonData), {
+          const qrCodeDataUrl = await QRCode.toDataURL(JSON.stringify(pokemon), {
             width: 200,
             margin: 2,
             color: {
@@ -153,14 +238,57 @@ export class QrManagerComponent {
               light: '#FFFFFF'
             }
           });
-          
+
           this.generatedQRs.push({
-            ...pokemonData,
+            ...pokemon,
             qrCodeDataUrl
           });
         } catch (error) {
-          console.error('Error generating QR code:', error);
+          console.error('Error generating QR code for Pokémon', pokemon.id, ':', error);
         }
+      }
+
+      if (this.generatedQRs.length === 0) {
+        this.errorMessage = 'No se encontraron Pokémon con los filtros especificados';
+      }
+    } catch (error: any) {
+      console.error('Error fetching Pokémon data:', error);
+      this.errorMessage = error?.error?.message || error?.message || 'Error al obtener los datos del servidor. Por favor, intenta de nuevo.';
+      
+      // Fallback: generar QR localmente si el backend falla
+      await this.generateQRsLocally(minId, maxId, rarity);
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  private async generateQRsLocally(minId: number, maxId: number, rarity?: string) {
+    console.warn('Usando generación local de QR como fallback');
+    
+    for (let id = minId; id <= maxId; id++) {
+      const pokemonData = {
+        id,
+        name: `Pokémon ${id}`,
+        rarity: rarity || 'common',
+        timestamp: new Date().toISOString()
+      };
+
+      try {
+        const qrCodeDataUrl = await QRCode.toDataURL(JSON.stringify(pokemonData), {
+          width: 200,
+          margin: 2,
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+          }
+        });
+
+        this.generatedQRs.push({
+          ...pokemonData,
+          qrCodeDataUrl
+        });
+      } catch (error) {
+        console.error('Error generating QR code:', error);
       }
     }
   }

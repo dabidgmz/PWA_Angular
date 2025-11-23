@@ -5,6 +5,8 @@ import { TrainersComponent } from './components/trainers.component';
 import { QrManagerComponent } from './components/qr-manager.component';
 import { CapturesComponent } from './components/captures.component';
 import { SettingsComponent } from './components/settings.component';
+import { TrainerStatsComponent } from './components/trainer-stats.component';
+import { TopSpeciesComponent } from './components/top-species.component';
 import { LoginComponent } from './auth/login.component';
 import { VerifyCodeComponent } from './auth/verify-code.component';
 import { AuthGuard } from './core/guards/auth.guard';
@@ -43,6 +45,16 @@ export const routes: Routes = [
       { 
         path: 'qr-manager', 
         component: QrManagerComponent,
+        canActivate: [ProfessorGuard]
+      },
+      { 
+        path: 'trainer-stats', 
+        component: TrainerStatsComponent,
+        canActivate: [ProfessorGuard]
+      },
+      { 
+        path: 'top-species', 
+        component: TopSpeciesComponent,
         canActivate: [ProfessorGuard]
       },
       { 

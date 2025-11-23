@@ -91,6 +91,23 @@ export interface CaptureHistoryResponse {
   };
 }
 
+export interface TopSpecies {
+  id: number;
+  pokeapiId: number;
+  name: string;
+  count: number;
+}
+
+export interface TopSpeciesResponse {
+  data: TopSpecies[];
+  meta: {
+    total: number;
+    perPage: number;
+    currentPage: number;
+    lastPage: number;
+  };
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -103,8 +120,18 @@ export class AdminService {
     return this.http.get<Statistics>(`${this.API_URL}/admin/statistics`);
   }
 
-  getTopSpecies(): Observable<{ data: TopSpecies[] }> {
-    return this.http.get<{ data: TopSpecies[] }>(`${this.API_URL}/admin/species/top`);
+  getTopSpecies(params?: {
+    page?: number;
+    perPage?: number;
+  }): Observable<TopSpeciesResponse> {
+    let httpParams = new HttpParams();
+    
+    if (params?.page) httpParams = httpParams.set('page', params.page.toString());
+    if (params?.perPage) httpParams = httpParams.set('perPage', params.perPage.toString());
+
+    return this.http.get<TopSpeciesResponse>(`${this.API_URL}/admin/species/top`, {
+      params: httpParams
+    });
   }
 
   getAllTrainers(params?: {
@@ -117,10 +144,12 @@ export class AdminService {
     
     if (params?.page) httpParams = httpParams.set('page', params.page.toString());
     if (params?.perPage) httpParams = httpParams.set('perPage', params.perPage.toString());
-    if (params?.search) httpParams = httpParams.set('search', params.search);
+    if (params?.search && params.search.trim()) {
+      httpParams = httpParams.set('search', params.search.trim());
+    }
     if (params?.status) httpParams = httpParams.set('status', params.status);
 
-    return this.http.get<TrainerListResponse>(`${this.API_URL}/admin/trainers/all`, {
+    return this.http.get<TrainerListResponse>(`${this.API_URL}/admin/trainers`, {
       params: httpParams
     });
   }
@@ -157,6 +186,31 @@ export class AdminService {
 
   getMetrics(): Observable<any> {
     return this.http.get(`${this.API_URL}/admin/metrics`);
+  }
+
+  getTrainerDetails(trainerId: number, params?: {
+    capturePage?: number;
+    capturePerPage?: number;
+  }): Observable<TrainerDetailsResponse> {
+    let httpParams = new HttpParams();
+    
+    if (params?.capturePage) {
+      httpParams = httpParams.set('capturePage', params.capturePage.toString());
+    }
+    if (params?.capturePerPage) {
+      httpParams = httpParams.set('capturePerPage', params.capturePerPage.toString());
+    }
+
+    return this.http.get<TrainerDetailsResponse>(
+      `${this.API_URL}/admin/trainers/${trainerId}/details`,
+      { params: httpParams }
+    );
+  }
+
+  getTrainerStatsForCharts(): Observable<TrainerStatsForChartsResponse> {
+    return this.http.get<TrainerStatsForChartsResponse>(
+      `${this.API_URL}/admin/trainers/stats/charts`
+    );
   }
 
   getProfessorProfile(): Observable<ProfessorProfile> {
@@ -259,4 +313,161 @@ export interface UpdateProfessorProfileRequest {
 export interface UpdateProfessorProfileResponse {
   message: string;
   profesor: ProfessorProfile;
+}
+
+export interface TrainerDetails {
+  id: number;
+  name: string;
+  email: string;
+  phone?: string;
+  gender?: string;
+  isBanned: boolean;
+  isVerified: boolean;
+  status: 'activo' | 'baneado' | 'no_verificado';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PokemonInstance {
+  id: number;
+  pokemon: {
+    id: number;
+    pokeapiId: number;
+    name: string;
+    spriteUrl?: string;
+    types?: string[];
+    height?: number;
+    weight?: number;
+  };
+  nickname?: string | null;
+  level: number;
+  location: 'team' | 'pc';
+  pcBox?: number | null;
+  createdAt: string;
+}
+
+export interface PCBoxes {
+  box1: PokemonInstance[];
+  box2: PokemonInstance[];
+  box3: PokemonInstance[];
+  counts: {
+    box1: number;
+    box2: number;
+    box3: number;
+    total: number;
+  };
+}
+
+export interface TrainerCapture {
+  id: number;
+  pokemon: {
+    id: number;
+    pokeapiId: number;
+    name: string;
+    spriteUrl?: string;
+  };
+  rarity: 'common' | 'rare' | 'epic' | 'legend';
+  capturedAt: string;
+  formattedDate?: {
+    day: number;
+    month: number;
+    year: number;
+    hour: number;
+    minute: number;
+    second: number;
+    full: string;
+  };
+}
+
+export interface TrainerStatistics {
+  teamCount: number;
+  pcCount: number;
+  totalPokemon: number;
+  totalCaptures: number;
+  pcBoxCounts: {
+    box1: number;
+    box2: number;
+    box3: number;
+  };
+  capturesByRarity: {
+    common: number;
+    rare: number;
+    epic: number;
+    legend: number;
+  };
+}
+
+export interface TrainerDetailsResponse {
+  trainer: TrainerDetails;
+  team: PokemonInstance[];
+  pc: PCBoxes;
+  captures: {
+    data: TrainerCapture[];
+    meta: {
+      total: number;
+      perPage: number;
+      currentPage: number;
+      lastPage: number;
+    };
+  };
+  statistics: TrainerStatistics;
+}
+
+// Trainer Stats for Charts
+export interface TrainerStatsOverview {
+  total: number;
+  active: number;
+  banned: number;
+  unverified: number;
+}
+
+export interface StatusDistributionItem {
+  label: string;
+  value: number;
+  color: string;
+  percentage: number;
+}
+
+export interface RegistrationTimelineItem {
+  date: string;
+  count: number;
+  cumulative: number;
+}
+
+export interface DistributionItem {
+  range: string;
+  count: number;
+}
+
+export interface TopTrainer {
+  id: number;
+  name: string;
+  email: string;
+  totalPokemon: number;
+  teamCount: number;
+  totalCaptures: number;
+}
+
+export interface CapturesByRarityItem {
+  rarity: 'common' | 'rare' | 'epic' | 'legend';
+  count: number;
+  percentage: number;
+}
+
+export interface MonthlyStatsItem {
+  month: string;
+  monthName: string;
+  trainers: number;
+  captures: number;
+}
+
+export interface TrainerStatsForChartsResponse {
+  overview: TrainerStatsOverview;
+  statusDistribution: StatusDistributionItem[];
+  registrationTimeline: RegistrationTimelineItem[];
+  teamDistribution: DistributionItem[];
+  topTrainers: TopTrainer[];
+  capturesByRarity: CapturesByRarityItem[];
+  pokemonDistribution: DistributionItem[];
+  monthlyStats: MonthlyStatsItem[];
 }

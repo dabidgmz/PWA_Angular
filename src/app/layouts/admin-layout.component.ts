@@ -86,6 +86,24 @@ import { OfflineComponent } from '../shared/components/offline.component';
                 <span class="font-semibold text-gray-700 group-hover:text-purple-600 text-lg">QR Manager</span>
                 <div class="indicator absolute right-4 w-2 h-2 bg-purple-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
               </a>
+              
+              <a routerLink="/trainer-stats" routerLinkActive="active" 
+                 class="nav-item flex items-center space-x-4 px-4 py-4 rounded-2xl transition-all duration-300 hover:bg-indigo-50 group relative">
+                <div class="icon-container w-10 h-10 bg-indigo-100 group-hover:bg-indigo-200 rounded-xl flex items-center justify-center transition-colors">
+                  <mat-icon class="text-indigo-600 group-hover:scale-110 transition-transform text-xl">analytics</mat-icon>
+                </div>
+                <span class="font-semibold text-gray-700 group-hover:text-indigo-600 text-lg">Estadísticas</span>
+                <div class="indicator absolute right-4 w-2 h-2 bg-indigo-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              </a>
+              
+              <a routerLink="/top-species" routerLinkActive="active" 
+                 class="nav-item flex items-center space-x-4 px-4 py-4 rounded-2xl transition-all duration-300 hover:bg-yellow-50 group relative">
+                <div class="icon-container w-10 h-10 bg-yellow-100 group-hover:bg-yellow-200 rounded-xl flex items-center justify-center transition-colors">
+                  <mat-icon class="text-yellow-600 group-hover:scale-110 transition-transform text-xl">emoji_events</mat-icon>
+                </div>
+                <span class="font-semibold text-gray-700 group-hover:text-yellow-600 text-lg">Top Especies</span>
+                <div class="indicator absolute right-4 w-2 h-2 bg-yellow-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              </a>
             </div>
             
             <!-- Settings Section -->
