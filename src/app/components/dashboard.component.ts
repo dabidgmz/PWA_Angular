@@ -28,7 +28,7 @@ import { ToastService } from '../core/services/toast.service';
           <mat-icon class="text-yellow-600 mr-3">warning</mat-icon>
           <div>
             <h3 class="text-yellow-800 font-semibold">Backend no disponible</h3>
-            <p class="text-yellow-700 text-sm">No se pudo conectar con el servidor. Mostrando datos de demostración. Asegúrate de que el backend esté corriendo en <code class="bg-yellow-100 px-2 py-1 rounded">http://localhost:3333</code></p>
+            <p class="text-yellow-700 text-sm">No se pudo conectar con el servidor. Mostrando datos de demostración. Asegúrate de que el backend esté disponible en <code class="bg-yellow-100 px-2 py-1 rounded">https://jrctesthub.live</code></p>
           </div>
         </div>
       </div>

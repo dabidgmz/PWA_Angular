@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { API_URL } from '../config';
 
 export interface QRPokemon {
   id: number;
@@ -23,7 +24,6 @@ export interface QRManagerResponse {
   providedIn: 'root'
 })
 export class QRManagerService {
-  private readonly API_URL = 'http://localhost:3333';
 
   constructor(private http: HttpClient) {}
 
@@ -42,7 +42,7 @@ export class QRManagerService {
       params = params.set('rarity', rarity);
     }
 
-    return this.http.get<QRManagerResponse>(`${this.API_URL}/qr-manager`, { params });
+    return this.http.get<QRManagerResponse>(`${API_URL}/qr-manager`, { params });
   }
 }
 

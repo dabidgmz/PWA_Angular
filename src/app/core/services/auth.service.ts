@@ -3,12 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap, catchError, throwError } from 'rxjs';
 import { User, AuthResponse, LoginRequest, RegisterRequest, VerifyCodeRequest, VerifyCodeResponse, ResendCodeRequest, ResendCodeResponse } from '../models/auth';
 import { storage } from '../utils/storage';
+import { API_URL } from '../config';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly API_URL = 'http://localhost:3333';
   private readonly USER_KEY = 'pokemon_user';
   private readonly TOKEN_KEY = 'pokemon_token';
   private userSubject = new BehaviorSubject<User | null>(null);
@@ -40,7 +40,7 @@ export class AuthService {
   login(email: string, password: string): Observable<AuthResponse> {
     const loginData: LoginRequest = { email, password };
     
-    return this.http.post<AuthResponse>(`${this.API_URL}/auth/login`, loginData).pipe(
+    return this.http.post<AuthResponse>(`${API_URL}/auth/login`, loginData).pipe(
       tap((response) => {
         // Solo guardar usuario y token si no requiere código
         if (!response.requiresCode && response.token) {
@@ -56,7 +56,7 @@ export class AuthService {
   verifyCode(email: string, code: string): Observable<VerifyCodeResponse> {
     const verifyData: VerifyCodeRequest = { email, code };
     
-    return this.http.post<VerifyCodeResponse>(`${this.API_URL}/auth/verify-code`, verifyData).pipe(
+    return this.http.post<VerifyCodeResponse>(`${API_URL}/auth/verify-code`, verifyData).pipe(
       tap((response) => {
         this.setUser(response.user, response.token);
       }),
@@ -69,7 +69,7 @@ export class AuthService {
   resendCode(email: string): Observable<ResendCodeResponse> {
     const resendData: ResendCodeRequest = { email };
     
-    return this.http.post<ResendCodeResponse>(`${this.API_URL}/auth/resend-code`, resendData).pipe(
+    return this.http.post<ResendCodeResponse>(`${API_URL}/auth/resend-code`, resendData).pipe(
       catchError((error) => {
         return throwError(() => error);
       })
@@ -77,7 +77,7 @@ export class AuthService {
   }
 
   register(data: RegisterRequest): Observable<any> {
-    return this.http.post(`${this.API_URL}/auth/register`, data).pipe(
+    return this.http.post(`${API_URL}/auth/register`, data).pipe(
       catchError((error) => {
         return throwError(() => error);
       })
@@ -85,7 +85,7 @@ export class AuthService {
   }
 
   verifyEmail(token: string): Observable<any> {
-    return this.http.get(`${this.API_URL}/auth/verify`, {
+    return this.http.get(`${API_URL}/auth/verify`, {
       params: { token }
     });
   }

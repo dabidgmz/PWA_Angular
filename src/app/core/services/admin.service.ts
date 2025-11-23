@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, throwError, of } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
+import { API_URL } from '../config';
 
 export interface Statistics {
   trainers: {
@@ -112,12 +113,12 @@ export interface TopSpeciesResponse {
   providedIn: 'root'
 })
 export class AdminService {
-  private readonly API_URL = 'http://localhost:3333';
+  
 
   constructor(private http: HttpClient) {}
 
   getStatistics(): Observable<Statistics> {
-    return this.http.get<Statistics>(`${this.API_URL}/admin/statistics`);
+    return this.http.get<Statistics>(`${API_URL}/admin/statistics`);
   }
 
   getTopSpecies(params?: {
@@ -129,7 +130,7 @@ export class AdminService {
     if (params?.page) httpParams = httpParams.set('page', params.page.toString());
     if (params?.perPage) httpParams = httpParams.set('perPage', params.perPage.toString());
 
-    return this.http.get<TopSpeciesResponse>(`${this.API_URL}/admin/species/top`, {
+    return this.http.get<TopSpeciesResponse>(`${API_URL}/admin/species/top`, {
       params: httpParams
     });
   }
@@ -149,7 +150,7 @@ export class AdminService {
     }
     if (params?.status) httpParams = httpParams.set('status', params.status);
 
-    return this.http.get<TrainerListResponse>(`${this.API_URL}/admin/trainers`, {
+    return this.http.get<TrainerListResponse>(`${API_URL}/admin/trainers`, {
       params: httpParams
     });
   }
@@ -173,19 +174,19 @@ export class AdminService {
     if (params?.dateFrom) httpParams = httpParams.set('dateFrom', params.dateFrom);
     if (params?.dateTo) httpParams = httpParams.set('dateTo', params.dateTo);
 
-    return this.http.get<CaptureHistoryResponse>(`${this.API_URL}/admin/captures/history`, {
+    return this.http.get<CaptureHistoryResponse>(`${API_URL}/admin/captures/history`, {
       params: httpParams
     });
   }
 
   banTrainer(trainerId: number, banned: boolean): Observable<any> {
-    return this.http.patch(`${this.API_URL}/admin/trainers/${trainerId}/ban`, {
+    return this.http.patch(`${API_URL}/admin/trainers/${trainerId}/ban`, {
       banned
     });
   }
 
   getMetrics(): Observable<any> {
-    return this.http.get(`${this.API_URL}/admin/metrics`);
+    return this.http.get(`${API_URL}/admin/metrics`);
   }
 
   getTrainerDetails(trainerId: number, params?: {
@@ -202,14 +203,14 @@ export class AdminService {
     }
 
     return this.http.get<TrainerDetailsResponse>(
-      `${this.API_URL}/admin/trainers/${trainerId}/details`,
+      `${API_URL}/admin/trainers/${trainerId}/details`,
       { params: httpParams }
     );
   }
 
   getTrainerStatsForCharts(): Observable<TrainerStatsForChartsResponse> {
     return this.http.get<TrainerStatsForChartsResponse>(
-      `${this.API_URL}/admin/trainers/stats/charts`
+      `${API_URL}/admin/trainers/stats/charts`
     );
   }
 
@@ -220,7 +221,7 @@ export class AdminService {
       return of(cachedProfile);
     }
     
-    return this.http.get<ProfessorProfile>(`${this.API_URL}/profesores/me`).pipe(
+    return this.http.get<ProfessorProfile>(`${API_URL}/profesores/me`).pipe(
       tap((profile) => {
         // Guardar en cache
         this.cacheProfile(profile);
@@ -237,7 +238,7 @@ export class AdminService {
   }
 
   updateProfessorProfile(data: UpdateProfessorProfileRequest): Observable<UpdateProfessorProfileResponse> {
-    return this.http.put<UpdateProfessorProfileResponse>(`${this.API_URL}/profesores/me`, data).pipe(
+    return this.http.put<UpdateProfessorProfileResponse>(`${API_URL}/profesores/me`, data).pipe(
       tap((response) => {
         // Actualizar cache después de actualizar
         this.cacheProfile(response.profesor);
@@ -278,7 +279,7 @@ export class AdminService {
       if ('serviceWorker' in navigator && 'caches' in window) {
         caches.open('pokemon-cache-v1').then(cache => {
           cache.put(
-            new Request(`${this.API_URL}/profesores/me`),
+            new Request(`${API_URL}/profesores/me`),
             new Response(JSON.stringify(profile), {
               headers: { 'Content-Type': 'application/json' }
             })

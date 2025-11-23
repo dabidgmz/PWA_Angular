@@ -10,6 +10,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
 import { AdminService, TopSpecies, TopSpeciesResponse } from '../core/services/admin.service';
 import { ToastService } from '../core/services/toast.service';
+import { NetworkService } from '../core/services/network.service';
 
 @Component({
   selector: 'app-top-species',
@@ -31,6 +32,24 @@ import { ToastService } from '../core/services/toast.service';
           🏆 Top Especies Capturadas
         </h1>
         <p class="text-gray-600 text-lg">Ranking de Pokémon más capturados en el sistema</p>
+      </div>
+
+      <!-- Offline Message -->
+      <div *ngIf="!isOnline" class="glass-card p-6 bg-yellow-50 border-l-4 border-yellow-400">
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0">
+            <mat-icon class="text-yellow-600 text-4xl">cloud_off</mat-icon>
+          </div>
+          <div class="flex-1">
+            <h3 class="text-xl font-semibold text-yellow-800 mb-2">Sin Conexión a Internet</h3>
+            <p class="text-yellow-700 mb-2">Por favor, verifica tu conexión a internet y vuelve a intentar.</p>
+            <div class="flex items-center space-x-2 mt-4">
+              <mat-icon class="text-yellow-600">wifi_off</mat-icon>
+              <span class="text-yellow-800 font-medium">Desconectado</span>
+            </div>
+            <p class="text-sm text-yellow-700 mt-2">Esta aplicación requiere conexión a internet para funcionar correctamente.</p>
+          </div>
+        </div>
       </div>
 
       <!-- Loading State -->
@@ -169,16 +188,36 @@ export class TopSpeciesComponent implements OnInit, OnDestroy {
   
   isLoading = false;
   error: string | null = null;
+  isOnline = true;
   private destroy$ = new Subject<void>();
   private maxCount = 0;
 
   constructor(
     private adminService: AdminService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private networkService: NetworkService
   ) {}
 
   ngOnInit() {
-    this.loadTopSpecies();
+    // Suscribirse al estado de la red
+    this.networkService.onlineStatus$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(status => {
+        this.isOnline = status;
+        if (!status) {
+          this.toastService.warning('Sin conexión a internet. Algunas funciones están deshabilitadas.');
+        } else if (this.topSpecies === null) {
+          // Si se reconecta y no hay datos, cargar top species
+          this.loadTopSpecies();
+        }
+      });
+    
+    // Cargar top species solo si hay conexión
+    if (this.isOnline) {
+      this.loadTopSpecies();
+    } else {
+      this.toastService.warning('Sin conexión a internet. No se puede cargar el ranking.');
+    }
   }
 
   ngOnDestroy() {

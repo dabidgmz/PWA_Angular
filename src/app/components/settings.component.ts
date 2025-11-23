@@ -382,7 +382,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
       // También guardar en service worker cache si está disponible
       if ('serviceWorker' in navigator && 'caches' in window) {
         caches.open('pokemon-cache-v1').then(cache => {
-          const request = new Request('http://localhost:3333/profesores/me');
+          const request = new Request('https://jrctesthub.live/profesores/me');
           const response = new Response(JSON.stringify(profile), {
             headers: { 'Content-Type': 'application/json' }
           });

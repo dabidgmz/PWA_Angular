@@ -1,5 +1,15 @@
 /* You can add global styles to this file, and also import other style files */
 
+/* All @import rules must come first */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+@import 'flatpickr/dist/flatpickr.min.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* Trainer Details Dialog Styles */
 ::ng-deep .trainer-details-dialog-container .mat-mdc-dialog-container {
   padding: 0 !important;
@@ -7,20 +17,6 @@
   overflow: hidden !important;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
 }
-
-/* Import Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
-/* Import Angular Material theme */
-@import '@angular/material/prebuilt-themes/indigo-pink.css';
-
-/* Import Flatpickr */
-@import 'flatpickr/dist/flatpickr.min.css';
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 /* Custom CSS Variables */
 :root {
