@@ -338,7 +338,6 @@ export class TrainerDetailsDialogComponent implements OnInit {
       );
       this.trainerDetails = response;
     } catch (error: any) {
-      console.error('Error loading trainer details:', error);
       this.error = error?.error?.message || 'Error al cargar los detalles del entrenador';
     } finally {
       this.isLoading = false;

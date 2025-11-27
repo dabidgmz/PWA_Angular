@@ -157,7 +157,6 @@ export class DashboardComponent implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Error loading statistics:', error);
         this.isLoading = false;
         this.isBackendAvailable = false;
         
@@ -183,7 +182,6 @@ export class DashboardComponent implements OnInit {
         }));
       },
       error: (error) => {
-        console.error('Error loading top species:', error);
         // Fallback a datos demo
         this.topSpecies = [
           { name: 'pikachu', count: 45 },

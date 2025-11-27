@@ -320,7 +320,6 @@ export class TrainerStatsComponent implements OnInit, OnDestroy, AfterViewInit {
           }, 100);
         },
         error: (error) => {
-          console.error('Error loading trainer stats:', error);
           const errorMessage = error?.error?.message || 'Error al cargar las estadísticas';
           this.error = errorMessage;
           this.isLoading = false;

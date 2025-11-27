@@ -252,7 +252,6 @@ export class QrManagerComponent implements OnInit {
         this.errorMessage = 'No se encontraron Pokémon con los filtros especificados';
       }
     } catch (error: any) {
-      console.error('Error fetching Pokémon data:', error);
       this.errorMessage = error?.error?.message || error?.message || 'Error al obtener los datos del servidor. Por favor, intenta de nuevo.';
       
       // Fallback: generar QR localmente si el backend falla
@@ -263,7 +262,7 @@ export class QrManagerComponent implements OnInit {
   }
 
   private async generateQRsLocally(minId: number, maxId: number, rarity?: string) {
-    console.warn('Usando generación local de QR como fallback');
+
     
     for (let id = minId; id <= maxId; id++) {
       const pokemonData = {
@@ -366,7 +365,6 @@ export class QrManagerComponent implements OnInit {
       pdf.save(`pokemon-qr-codes-${new Date().toISOString().split('T')[0]}.pdf`);
       
     } catch (error) {
-      console.error('Error generating PDF:', error);
       alert('Error al generar el PDF. Inténtalo de nuevo.');
     }
   }

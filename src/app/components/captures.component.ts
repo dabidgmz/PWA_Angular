@@ -356,7 +356,6 @@ export class CapturesComponent implements OnInit, OnDestroy {
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Error loading captures:', error);
           const errorMessage = error?.error?.message || 'Error al cargar las capturas';
           this.error = errorMessage;
         this.isLoading = false;

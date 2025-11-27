@@ -253,7 +253,6 @@ export class TopSpeciesComponent implements OnInit, OnDestroy {
           this.isLoading = false;
         },
         error: (error) => {
-          console.error('Error loading top species:', error);
           const errorMessage = error?.error?.message || 'Error al cargar el ranking de especies';
           this.error = errorMessage;
           this.isLoading = false;

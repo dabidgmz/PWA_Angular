@@ -255,7 +255,6 @@ export class SettingsComponent implements OnInit, OnDestroy {
           }
         },
         error: (error) => {
-          console.error('Error loading professor profile:', error);
           
           // Intentar cargar desde cache si hay error
           const cachedProfile = this.getCachedProfile();
@@ -344,7 +343,6 @@ export class SettingsComponent implements OnInit, OnDestroy {
           }
         },
         error: (error) => {
-          console.error('Error updating professor profile:', error);
           this.isUpdatingProfile = false;
           this.toastService.error(error.error?.message || 'Error al actualizar el perfil');
         }

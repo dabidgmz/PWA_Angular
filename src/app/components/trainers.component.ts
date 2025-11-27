@@ -402,7 +402,6 @@ export class TrainersComponent implements OnInit, AfterViewInit, OnDestroy {
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Error loading trainers:', error);
         const errorMessage = error?.error?.message || 'Error al cargar los entrenadores';
         this.error = errorMessage;
         this.isLoading = false;
@@ -441,7 +440,6 @@ export class TrainersComponent implements OnInit, AfterViewInit, OnDestroy {
           this.loadTrainers(); // Recargar lista
         },
         error: (error) => {
-          console.error(`Error al ${action} entrenador:`, error);
           const errorMessage = error?.error?.message || 'Error desconocido';
           this.toastService.error(`Error al ${action} al entrenador: ${errorMessage}`);
         }
