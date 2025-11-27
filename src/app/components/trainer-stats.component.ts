@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -9,6 +9,16 @@ import { Subject, takeUntil, firstValueFrom } from 'rxjs';
 import { AdminService, TrainerStatsForChartsResponse } from '../core/services/admin.service';
 import { ToastService } from '../core/services/toast.service';
 import { NetworkService } from '../core/services/network.service';
+import {
+  Chart,
+  ChartConfiguration,
+  ChartData,
+  ChartType,
+  registerables
+} from 'chart.js';
+
+// Registrar todos los componentes de Chart.js
+Chart.register(...registerables);
 
 @Component({
   selector: 'app-trainer-stats',
@@ -120,34 +130,15 @@ import { NetworkService } from '../core/services/network.service';
         <!-- Charts Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
-          <!-- Status Distribution Pie Chart -->
+          <!-- Status Distribution Doughnut Chart -->
           <div class="glass-card p-6">
             <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
               <mat-icon class="mr-2 text-indigo-500">pie_chart</mat-icon>
               Distribución por Estado
             </h3>
             <div class="flex flex-col items-center">
-              <div class="pie-chart-container relative w-64 h-64 mb-4">
-                <svg width="256" height="256" class="transform -rotate-90">
-                  <circle
-                    *ngFor="let item of stats.statusDistribution; let i = index"
-                    [attr.cx]="128"
-                    [attr.cy]="128"
-                    [attr.r]="100"
-                    [attr.fill]="item.color"
-                    [attr.stroke]="'white'"
-                    [attr.stroke-width]="4"
-                    [style.stroke-dasharray]="getStrokeDashArray(item.percentage, i)"
-                    [style.stroke-dashoffset]="getStrokeDashOffset(i)"
-                    class="transition-all duration-500"
-                  />
-                </svg>
-                <div class="absolute inset-0 flex items-center justify-center">
-                  <div class="text-center">
-                    <p class="text-3xl font-bold text-gray-800">{{ stats.overview.total }}</p>
-                    <p class="text-sm text-gray-600">Total</p>
-                  </div>
-                </div>
+              <div class="w-full max-w-md mb-4">
+                <canvas #statusChartCanvas></canvas>
               </div>
               <div class="space-y-2 w-full">
                 <div *ngFor="let item of stats.statusDistribution" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -170,22 +161,8 @@ import { NetworkService } from '../core/services/network.service';
               <mat-icon class="mr-2 text-blue-500">bar_chart</mat-icon>
               Distribución de Equipos
             </h3>
-            <div class="space-y-4">
-              <div *ngFor="let item of stats.teamDistribution; let i = index" class="flex items-center space-x-4">
-                <div class="w-24 text-sm font-semibold text-gray-700">{{ item.range }}</div>
-                <div class="flex-1">
-                  <div class="relative h-8 bg-gray-200 rounded-full overflow-hidden">
-                    <div 
-                      class="absolute top-0 left-0 h-full rounded-full transition-all duration-700"
-                      [style.backgroundColor]="getTeamColor(i)"
-                      [style.width.%]="getPercentage(item.count, getMaxTeamCount())"
-                    ></div>
-                    <div class="absolute inset-0 flex items-center justify-center">
-                      <span class="text-sm font-bold text-gray-800">{{ item.count }}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <div class="w-full">
+              <canvas #teamChartCanvas></canvas>
             </div>
           </div>
 
@@ -195,60 +172,39 @@ import { NetworkService } from '../core/services/network.service';
               <mat-icon class="mr-2 text-green-500">show_chart</mat-icon>
               Registros (Últimos 30 días)
             </h3>
-            <div class="space-y-3">
-              <div *ngFor="let item of stats.registrationTimeline" class="flex items-center space-x-4">
-                <div class="w-24 text-xs text-gray-600">{{ item.date | date:'d/M' }}</div>
-                <div class="flex-1 flex items-center space-x-2">
-                  <div class="flex-1 bg-gray-200 rounded-full h-6 relative overflow-hidden">
-                    <div 
-                      class="absolute left-0 top-0 h-full bg-blue-500 rounded-full transition-all duration-500"
-                      [style.width.%]="getTimelinePercentage('count', item.count)"
-                    ></div>
-                    <span class="absolute inset-0 flex items-center justify-center text-xs font-semibold text-white">
-                      {{ item.count }} diarios
-                    </span>
-                  </div>
-                </div>
-                <div class="w-32 text-right text-sm font-semibold text-gray-700">
-                  Total: {{ item.cumulative }}
-                </div>
-              </div>
-              <div *ngIf="stats.registrationTimeline.length === 0" class="text-center py-8 text-gray-500">
-                <mat-icon class="text-4xl mb-2">timeline</mat-icon>
-                <p>No hay datos de registros disponibles</p>
-              </div>
+            <div class="w-full">
+              <canvas #timelineChartCanvas></canvas>
+            </div>
+            <div *ngIf="stats.registrationTimeline.length === 0" class="text-center py-8 text-gray-500">
+              <mat-icon class="text-4xl mb-2">timeline</mat-icon>
+              <p>No hay datos de registros disponibles</p>
             </div>
           </div>
 
-          <!-- Captures by Rarity Chart -->
+          <!-- Captures by Rarity Doughnut Chart -->
           <div class="glass-card p-6">
             <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
               <mat-icon class="mr-2 text-purple-500">donut_large</mat-icon>
               Capturas por Rareza
             </h3>
-            <div class="grid grid-cols-2 gap-4">
-              <div *ngFor="let item of stats.capturesByRarity" class="p-4 bg-gray-50 rounded-lg">
-                <div class="flex items-center space-x-2 mb-2">
-                  <div 
-                    class="w-4 h-4 rounded-full" 
-                    [class.bg-gray-400]="item.rarity === 'common'"
-                    [class.bg-blue-400]="item.rarity === 'rare'"
-                    [class.bg-purple-400]="item.rarity === 'epic'"
-                    [class.bg-yellow-400]="item.rarity === 'legend'"
-                  ></div>
-                  <span class="font-semibold text-gray-800 capitalize">{{ getRarityLabel(item.rarity) }}</span>
-                </div>
-                <p class="text-2xl font-bold text-gray-800">{{ item.count }}</p>
-                <p class="text-xs text-gray-600">{{ item.percentage }}%</p>
-                <div class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div 
-                    class="h-full rounded-full transition-all duration-700"
-                    [class.bg-gray-400]="item.rarity === 'common'"
-                    [class.bg-blue-400]="item.rarity === 'rare'"
-                    [class.bg-purple-400]="item.rarity === 'epic'"
-                    [class.bg-yellow-400]="item.rarity === 'legend'"
-                    [style.width.%]="item.percentage"
-                  ></div>
+            <div class="flex flex-col items-center">
+              <div class="w-full max-w-md mb-4">
+                <canvas #rarityChartCanvas></canvas>
+              </div>
+              <div class="grid grid-cols-2 gap-4 w-full">
+                <div *ngFor="let item of stats.capturesByRarity" class="p-3 bg-gray-50 rounded-lg">
+                  <div class="flex items-center space-x-2 mb-1">
+                    <div 
+                      class="w-4 h-4 rounded-full" 
+                      [class.bg-gray-400]="item.rarity === 'common'"
+                      [class.bg-blue-400]="item.rarity === 'rare'"
+                      [class.bg-purple-400]="item.rarity === 'epic'"
+                      [class.bg-yellow-400]="item.rarity === 'legend'"
+                    ></div>
+                    <span class="font-semibold text-gray-800 capitalize text-sm">{{ getRarityLabel(item.rarity) }}</span>
+                  </div>
+                  <p class="text-xl font-bold text-gray-800">{{ item.count }}</p>
+                  <p class="text-xs text-gray-600">{{ item.percentage }}%</p>
                 </div>
               </div>
             </div>
@@ -256,27 +212,14 @@ import { NetworkService } from '../core/services/network.service';
 
         </div>
 
-        <!-- Pokemon Distribution -->
+        <!-- Pokemon Distribution Bar Chart -->
         <div class="glass-card p-6">
           <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
             <mat-icon class="mr-2 text-pink-500">bar_chart</mat-icon>
             Distribución de Pokémon por Entrenador
           </h3>
-          <div class="space-y-4">
-            <div *ngFor="let item of stats.pokemonDistribution" class="flex items-center space-x-4">
-              <div class="w-32 text-sm font-semibold text-gray-700">{{ item.range }}</div>
-              <div class="flex-1">
-                <div class="relative h-10 bg-gray-200 rounded-full overflow-hidden">
-                  <div 
-                    class="absolute top-0 left-0 h-full rounded-full bg-gradient-to-r from-pink-400 to-purple-500 transition-all duration-700"
-                    [style.width.%]="getPercentage(item.count, getMaxPokemonCount())"
-                  ></div>
-                  <div class="absolute inset-0 flex items-center justify-center">
-                    <span class="text-sm font-bold text-white">{{ item.count }} entrenadores</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div class="w-full">
+            <canvas #pokemonChartCanvas></canvas>
           </div>
         </div>
 
@@ -284,28 +227,29 @@ import { NetworkService } from '../core/services/network.service';
     </div>
   `,
   styles: [`
-    .pie-chart-container circle {
-      opacity: 0;
-      animation: fadeIn 0.5s ease-in forwards;
-    }
-    
-    .pie-chart-container circle:nth-child(1) { animation-delay: 0.1s; }
-    .pie-chart-container circle:nth-child(2) { animation-delay: 0.2s; }
-    .pie-chart-container circle:nth-child(3) { animation-delay: 0.3s; }
-    
-    @keyframes fadeIn {
-      to {
-        opacity: 1;
-      }
+    canvas {
+      max-height: 400px;
     }
   `]
 })
-export class TrainerStatsComponent implements OnInit, OnDestroy {
+export class TrainerStatsComponent implements OnInit, OnDestroy, AfterViewInit {
+  @ViewChild('statusChartCanvas') statusChartCanvas!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('teamChartCanvas') teamChartCanvas!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('timelineChartCanvas') timelineChartCanvas!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('rarityChartCanvas') rarityChartCanvas!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('pokemonChartCanvas') pokemonChartCanvas!: ElementRef<HTMLCanvasElement>;
+
   stats: TrainerStatsForChartsResponse | null = null;
   isLoading = false;
   error: string | null = null;
   isOnline = true;
   private destroy$ = new Subject<void>();
+  
+  private statusChart: Chart | null = null;
+  private teamChart: Chart | null = null;
+  private timelineChart: Chart | null = null;
+  private rarityChart: Chart | null = null;
+  private pokemonChart: Chart | null = null;
 
   constructor(
     private adminService: AdminService,
@@ -335,7 +279,27 @@ export class TrainerStatsComponent implements OnInit, OnDestroy {
     }
   }
 
+  ngAfterViewInit() {
+    // Los gráficos se crearán después de cargar los datos
+  }
+
   ngOnDestroy() {
+    // Destruir todos los gráficos
+    if (this.statusChart) {
+      this.statusChart.destroy();
+    }
+    if (this.teamChart) {
+      this.teamChart.destroy();
+    }
+    if (this.timelineChart) {
+      this.timelineChart.destroy();
+    }
+    if (this.rarityChart) {
+      this.rarityChart.destroy();
+    }
+    if (this.pokemonChart) {
+      this.pokemonChart.destroy();
+    }
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -350,6 +314,10 @@ export class TrainerStatsComponent implements OnInit, OnDestroy {
         next: (stats) => {
           this.stats = stats;
           this.isLoading = false;
+          // Crear gráficos después de un breve delay para asegurar que los canvas estén listos
+          setTimeout(() => {
+            this.createCharts();
+          }, 100);
         },
         error: (error) => {
           console.error('Error loading trainer stats:', error);
@@ -366,20 +334,6 @@ export class TrainerStatsComponent implements OnInit, OnDestroy {
     return Math.round((value / total) * 100);
   }
 
-  getTeamColor(index: number): string {
-    const colors = ['#ef4444', '#f59e0b', '#3b82f6', '#10b981'];
-    return colors[index] || '#6b7280';
-  }
-
-  getMaxTeamCount(): number {
-    if (!this.stats) return 1;
-    return Math.max(...this.stats.teamDistribution.map(item => item.count));
-  }
-
-  getMaxPokemonCount(): number {
-    if (!this.stats) return 1;
-    return Math.max(...this.stats.pokemonDistribution.map(item => item.count));
-  }
 
   getRarityLabel(rarity: string): string {
     const labels: { [key: string]: string } = {
@@ -391,28 +345,334 @@ export class TrainerStatsComponent implements OnInit, OnDestroy {
     return labels[rarity] || rarity;
   }
 
-  getStrokeDashArray(percentage: number, index: number): string {
-    const circumference = 2 * Math.PI * 100;
-    const previousPercentage = this.stats?.statusDistribution
-      .slice(0, index)
-      .reduce((sum, item) => sum + item.percentage, 0) || 0;
-    const dashLength = (circumference * percentage) / 100;
-    return `${dashLength} ${circumference}`;
+
+  private createCharts(): void {
+    if (!this.stats) return;
+
+    // Destruir gráficos existentes si existen
+    this.destroyCharts();
+
+    // Crear gráfico de distribución por estado (Doughnut)
+    this.createStatusChart();
+    
+    // Crear gráfico de distribución de equipos (Bar)
+    this.createTeamChart();
+    
+    // Crear gráfico de timeline de registros (Line)
+    this.createTimelineChart();
+    
+    // Crear gráfico de capturas por rareza (Doughnut)
+    this.createRarityChart();
+    
+    // Crear gráfico de distribución de Pokémon (Bar)
+    this.createPokemonChart();
   }
 
-  getStrokeDashOffset(index: number): number {
-    if (!this.stats) return 0;
-    const circumference = 2 * Math.PI * 100;
-    const previousPercentage = this.stats.statusDistribution
-      .slice(0, index)
-      .reduce((sum, item) => sum + item.percentage, 0);
-    return -((circumference * previousPercentage) / 100);
+  private destroyCharts(): void {
+    if (this.statusChart) {
+      this.statusChart.destroy();
+      this.statusChart = null;
+    }
+    if (this.teamChart) {
+      this.teamChart.destroy();
+      this.teamChart = null;
+    }
+    if (this.timelineChart) {
+      this.timelineChart.destroy();
+      this.timelineChart = null;
+    }
+    if (this.rarityChart) {
+      this.rarityChart.destroy();
+      this.rarityChart = null;
+    }
+    if (this.pokemonChart) {
+      this.pokemonChart.destroy();
+      this.pokemonChart = null;
+    }
   }
 
-  getTimelinePercentage(type: 'count', value: number): number {
-    if (!this.stats || this.stats.registrationTimeline.length === 0) return 0;
-    const maxValue = Math.max(...this.stats.registrationTimeline.map(item => item.count), 1);
-    return Math.min((value / maxValue) * 100, 100);
+  private createStatusChart(): void {
+    if (!this.statusChartCanvas || !this.stats) return;
+
+    const ctx = this.statusChartCanvas.nativeElement.getContext('2d');
+    if (!ctx) return;
+
+    const data: ChartData<'doughnut'> = {
+      labels: this.stats.statusDistribution.map(item => item.label),
+      datasets: [{
+        data: this.stats.statusDistribution.map(item => item.value),
+        backgroundColor: this.stats.statusDistribution.map(item => item.color),
+        borderWidth: 3,
+        borderColor: '#ffffff'
+      }]
+    };
+
+    const config: ChartConfiguration<'doughnut'> = {
+      type: 'doughnut',
+      data: data,
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            callbacks: {
+              label: (context) => {
+                const label = context.label || '';
+                const value = context.parsed || 0;
+                const total = this.stats?.overview.total || 1;
+                const percentage = ((value / total) * 100).toFixed(1);
+                return `${label}: ${value} (${percentage}%)`;
+              }
+            }
+          }
+        },
+        cutout: '60%'
+      }
+    };
+
+    this.statusChart = new Chart(ctx, config);
+  }
+
+  private createTeamChart(): void {
+    if (!this.teamChartCanvas || !this.stats) return;
+
+    const ctx = this.teamChartCanvas.nativeElement.getContext('2d');
+    if (!ctx) return;
+
+    const data: ChartData<'bar'> = {
+      labels: this.stats.teamDistribution.map(item => item.range),
+      datasets: [{
+        label: 'Entrenadores',
+        data: this.stats.teamDistribution.map(item => item.count),
+        backgroundColor: [
+          'rgba(239, 68, 68, 0.7)',
+          'rgba(245, 158, 11, 0.7)',
+          'rgba(59, 130, 246, 0.7)',
+          'rgba(16, 185, 129, 0.7)'
+        ],
+        borderColor: [
+          'rgb(239, 68, 68)',
+          'rgb(245, 158, 11)',
+          'rgb(59, 130, 246)',
+          'rgb(16, 185, 129)'
+        ],
+        borderWidth: 2
+      }]
+    };
+
+    const config: ChartConfiguration<'bar'> = {
+      type: 'bar',
+      data: data,
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            callbacks: {
+              label: (context) => {
+                return `Entrenadores: ${context.parsed.y}`;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              stepSize: 1
+            }
+          }
+        }
+      }
+    };
+
+    this.teamChart = new Chart(ctx, config);
+  }
+
+  private createTimelineChart(): void {
+    if (!this.timelineChartCanvas || !this.stats || this.stats.registrationTimeline.length === 0) return;
+
+    const ctx = this.timelineChartCanvas.nativeElement.getContext('2d');
+    if (!ctx) return;
+
+    const labels = this.stats.registrationTimeline.map(item => {
+      const date = new Date(item.date);
+      return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+    });
+
+    const data: ChartData<'line'> = {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Registros Diarios',
+          data: this.stats.registrationTimeline.map(item => item.count),
+          borderColor: 'rgb(59, 130, 246)',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          tension: 0.4,
+          fill: true,
+          borderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        },
+        {
+          label: 'Total Acumulado',
+          data: this.stats.registrationTimeline.map(item => item.cumulative),
+          borderColor: 'rgb(16, 185, 129)',
+          backgroundColor: 'rgba(16, 185, 129, 0.1)',
+          tension: 0.4,
+          fill: true,
+          borderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          yAxisID: 'y1'
+        }
+      ]
+    };
+
+    const config: ChartConfiguration<'line'> = {
+      type: 'line',
+      data: data,
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top'
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            position: 'left',
+            ticks: {
+              stepSize: 1
+            }
+          },
+          y1: {
+            beginAtZero: true,
+            position: 'right',
+            grid: {
+              drawOnChartArea: false
+            }
+          }
+        }
+      }
+    };
+
+    this.timelineChart = new Chart(ctx, config);
+  }
+
+  private createRarityChart(): void {
+    if (!this.rarityChartCanvas || !this.stats) return;
+
+    const ctx = this.rarityChartCanvas.nativeElement.getContext('2d');
+    if (!ctx) return;
+
+    const rarityColors: { [key: string]: string } = {
+      'common': 'rgba(156, 163, 175, 0.8)',
+      'rare': 'rgba(59, 130, 246, 0.8)',
+      'epic': 'rgba(147, 51, 234, 0.8)',
+      'legend': 'rgba(234, 179, 8, 0.8)'
+    };
+
+    const data: ChartData<'doughnut'> = {
+      labels: this.stats.capturesByRarity.map(item => this.getRarityLabel(item.rarity)),
+      datasets: [{
+        data: this.stats.capturesByRarity.map(item => item.count),
+        backgroundColor: this.stats.capturesByRarity.map(item => rarityColors[item.rarity] || 'rgba(156, 163, 175, 0.8)'),
+        borderWidth: 3,
+        borderColor: '#ffffff'
+      }]
+    };
+
+    const config: ChartConfiguration<'doughnut'> = {
+      type: 'doughnut',
+      data: data,
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            callbacks: {
+              label: (context) => {
+                const label = context.label || '';
+                const value = context.parsed || 0;
+                const item = this.stats?.capturesByRarity[context.dataIndex];
+                const percentage = item?.percentage || 0;
+                return `${label}: ${value} (${percentage}%)`;
+              }
+            }
+          }
+        },
+        cutout: '60%'
+      }
+    };
+
+    this.rarityChart = new Chart(ctx, config);
+  }
+
+  private createPokemonChart(): void {
+    if (!this.pokemonChartCanvas || !this.stats) return;
+
+    const ctx = this.pokemonChartCanvas.nativeElement.getContext('2d');
+    if (!ctx) return;
+
+    const data: ChartData<'bar'> = {
+      labels: this.stats.pokemonDistribution.map(item => item.range),
+      datasets: [{
+        label: 'Entrenadores',
+        data: this.stats.pokemonDistribution.map(item => item.count),
+        backgroundColor: 'rgba(236, 72, 153, 0.7)',
+        borderColor: 'rgb(236, 72, 153)',
+        borderWidth: 2,
+        borderRadius: 4
+      }]
+    };
+
+    const config: ChartConfiguration<'bar'> = {
+      type: 'bar',
+      data: data,
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            callbacks: {
+              label: (context) => {
+                return `${context.parsed.y} entrenadores`;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              stepSize: 1
+            }
+          }
+        }
+      }
+    };
+
+    this.pokemonChart = new Chart(ctx, config);
   }
 }
 

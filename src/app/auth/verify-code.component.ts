@@ -62,38 +62,55 @@ import Swal from 'sweetalert2';
             <div class="flex flex-col items-center">
               <app-otp-input 
                 [hasError]="hasError"
-                (completed)="onCodeComplete($event)">
+                (completed)="onCodeComplete($event)"
+                (codeChange)="onCodeChange($event)">
               </app-otp-input>
               
               <p *ngIf="hasError" class="text-red-500 text-sm mt-4 flex items-center">
                 <mat-icon class="text-sm mr-1">error</mat-icon>
                 Código incorrecto. Intenta nuevamente.
               </p>
+              
+              <p class="text-gray-500 text-xs mt-2">Ingresa el código de 6 dígitos que recibiste por email</p>
             </div>
 
-            <!-- Resend Code -->
-            <div class="text-center pt-4 border-t border-gray-200">
-              <p class="text-gray-600 text-sm mb-4">¿No recibiste el código?</p>
+            <!-- Verify Button -->
+            <div class="flex justify-center pt-2">
               <button 
-                mat-button 
-                (click)="resendCode()"
-                [disabled]="isResending || isLoading"
-                class="text-blue-600 hover:text-blue-700 font-medium">
-                <mat-icon class="text-sm mr-1">refresh</mat-icon>
-                {{ isResending ? 'Reenviando...' : 'Reenviar código' }}
+                mat-raised-button 
+                color="primary"
+                (click)="onVerifyClick()"
+                [disabled]="!currentCode || currentCode.length !== 6 || isLoading"
+                class="w-full max-w-xs py-3 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+                <mat-icon class="mr-2">verified</mat-icon>
+                {{ isLoading ? 'Verificando...' : 'Verificar Código' }}
               </button>
             </div>
 
-            <!-- Back to Login -->
-            <div class="text-center">
-              <button 
-                mat-button 
-                (click)="goBackToLogin()"
-                [disabled]="isLoading"
-                class="text-gray-600 hover:text-gray-800">
-                <mat-icon class="text-sm mr-1">arrow_back</mat-icon>
-                Volver al login
-              </button>
+            <!-- Resend Code and Back to Login -->
+            <div class="flex flex-col items-center space-y-3 pt-4 border-t border-gray-200">
+              <div class="text-center">
+                <p class="text-gray-600 text-sm mb-3">¿No recibiste el código?</p>
+                <button 
+                  mat-button 
+                  (click)="resendCode()"
+                  [disabled]="isResending || isLoading"
+                  class="text-blue-600 hover:text-blue-700 font-medium">
+                  <mat-icon class="text-sm mr-1">refresh</mat-icon>
+                  {{ isResending ? 'Reenviando...' : 'Reenviar código' }}
+                </button>
+              </div>
+
+              <div class="text-center">
+                <button 
+                  mat-button 
+                  (click)="goBackToLogin()"
+                  [disabled]="isLoading"
+                  class="text-gray-600 hover:text-gray-800">
+                  <mat-icon class="text-sm mr-1">arrow_back</mat-icon>
+                  Volver al login
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -151,6 +168,7 @@ export class VerifyCodeComponent implements OnInit {
   @ViewChild(OtpInputComponent) otpInput!: OtpInputComponent;
   
   email = '';
+  currentCode = '';
   hasError = false;
   isLoading = false;
   isResending = false;
@@ -193,9 +211,26 @@ export class VerifyCodeComponent implements OnInit {
     }
   }
 
+  onCodeChange(code: string) {
+    this.currentCode = code;
+    // Limpiar error cuando el usuario empieza a escribir
+    if (this.hasError && code.length > 0) {
+      this.hasError = false;
+    }
+  }
+
   onCodeComplete(code: string) {
-    if (code.length === 6) {
-      this.verifyCode(code);
+    this.currentCode = code;
+    // Opcional: verificar automáticamente cuando se complete
+    // Comentado para que el usuario use el botón manualmente
+    // if (code.length === 6) {
+    //   this.verifyCode(code);
+    // }
+  }
+
+  onVerifyClick() {
+    if (this.currentCode && this.currentCode.length === 6) {
+      this.verifyCode(this.currentCode);
     }
   }
 

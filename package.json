@@ -23,6 +23,7 @@
     "@angular/service-worker": "^17.3.0",
     "@sweetalert2/ngx-sweetalert2": "^14.0.1",
     "@types/qrcode": "^1.5.5",
+    "chart.js": "^4.5.1",
     "flatpickr": "^4.6.13",
     "jspdf": "^3.0.3",
     "qrcode": "^1.5.4",

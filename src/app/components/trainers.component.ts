@@ -47,8 +47,9 @@ import { AdminService, Trainer } from '../core/services/admin.service';
       
       <!-- Search and Stats -->
       <div class="glass-card p-6">
-        <div class="flex flex-col md:flex-row gap-4 items-center justify-between mb-6">
-          <div class="w-full md:w-96">
+        <!-- Search and Filter Row -->
+        <div class="flex flex-col md:flex-row gap-4 items-stretch md:items-center mb-6">
+          <div class="flex-1 min-w-0">
             <mat-form-field appearance="outline" class="w-full">
               <mat-label>Buscar entrenador</mat-label>
               <input 
@@ -61,8 +62,8 @@ import { AdminService, Trainer } from '../core/services/admin.service';
             </mat-form-field>
           </div>
           
-          <div class="flex items-center space-x-4">
-            <mat-form-field appearance="outline" class="w-40">
+          <div class="flex items-center gap-4 flex-shrink-0">
+            <mat-form-field appearance="outline" class="w-full md:w-40">
               <mat-label>Estado</mat-label>
               <mat-select [(ngModel)]="statusFilter" (selectionChange)="onStatusChange()">
                 <mat-option value="all">Todos</mat-option>
@@ -70,17 +71,18 @@ import { AdminService, Trainer } from '../core/services/admin.service';
                 <mat-option value="banned">Baneados</mat-option>
               </mat-select>
             </mat-form-field>
-          
-          <div class="flex items-center space-x-4">
-            <div class="text-center">
-                <p class="text-2xl font-bold text-gray-800 dark:text-gray-200">{{ totalItems }}</p>
-              <p class="text-sm text-gray-600 dark:text-gray-300">Total</p>
-            </div>
-            <div class="text-center">
-              <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ activeTrainers }}</p>
-              <p class="text-sm text-gray-600 dark:text-gray-300">Activos</p>
-            </div>
-            </div>
+          </div>
+        </div>
+        
+        <!-- Stats Row -->
+        <div class="flex flex-wrap items-center justify-center md:justify-start gap-6 md:gap-8 mb-6 pb-6 border-b border-gray-200">
+          <div class="flex flex-col items-center px-4 py-2 rounded-lg bg-gray-50 min-w-[100px]">
+            <p class="text-3xl md:text-4xl font-bold text-gray-800">{{ totalItems }}</p>
+            <p class="text-xs md:text-sm text-gray-600 font-medium uppercase tracking-wide">Total</p>
+          </div>
+          <div class="flex flex-col items-center px-4 py-2 rounded-lg bg-green-50 min-w-[100px]">
+            <p class="text-3xl md:text-4xl font-bold text-green-600">{{ activeTrainers }}</p>
+            <p class="text-xs md:text-sm text-gray-600 font-medium uppercase tracking-wide">Activos</p>
           </div>
         </div>
         
