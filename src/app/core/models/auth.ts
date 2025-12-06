@@ -12,6 +12,7 @@ export interface User {
 export interface LoginRequest {
   email: string;
   password: string;
+  hCaptchaToken: string;
 }
 
 export interface RegisterRequest {
@@ -32,6 +33,7 @@ export interface AuthResponse {
 export interface VerifyCodeRequest {
   email: string;
   code: string;
+  hCaptchaToken: string;
 }
 
 export interface VerifyCodeResponse {
@@ -43,6 +45,7 @@ export interface VerifyCodeResponse {
 
 export interface ResendCodeRequest {
   email: string;
+  hCaptchaToken: string;
 }
 
 export interface ResendCodeResponse {

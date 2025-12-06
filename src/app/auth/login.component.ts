@@ -9,6 +9,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { AuthService } from '../core/services/auth.service';
 import { ToastService } from '../core/services/toast.service';
+import { HcaptchaComponent } from '../components/hcaptcha.component';
+import { HCAPTCHA_SITE_KEY } from '../core/config';
 
 @Component({
   selector: 'app-login',
@@ -20,7 +22,8 @@ import { ToastService } from '../core/services/toast.service';
     MatInputModule,
     MatButtonModule,
     MatIconModule,
-    MatCardModule
+    MatCardModule,
+    HcaptchaComponent
   ],
   template: `
     <div class="login-container min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
@@ -116,6 +119,17 @@ import { ToastService } from '../core/services/toast.service';
                 <p class="text-red-700 text-sm font-medium">{{ errorMessage }}</p>
               </div>
             </div>
+
+            <!-- hCaptcha -->
+            <app-hcaptcha
+              [siteKey]="hCaptchaSiteKey"
+              (tokenChange)="onCaptchaToken($event)"
+              (errorChange)="hCaptchaError = $event"
+              ></app-hcaptcha>
+
+            <p *ngIf="hCaptchaError" class="text-sm text-red-600">
+              {{ hCaptchaError }}
+            </p>
 
             <button 
               mat-raised-button 
@@ -257,6 +271,10 @@ export class LoginComponent {
   isLoading = false;
   errorMessage = '';
 
+  hCaptchaSiteKey = HCAPTCHA_SITE_KEY;
+  hCaptchaToken: string | null = null;
+  hCaptchaError: string | null = null;
+
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
@@ -265,7 +283,15 @@ export class LoginComponent {
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]]
+      password: ['', [Validators.required, Validators.minLength(6)]],
+      hCaptchaToken: ['', [Validators.required]]
+    });
+  }
+
+  onCaptchaToken(token: string | null) {
+    this.hCaptchaToken = token;
+    this.loginForm.patchValue({
+      hCaptchaToken: token || '',
     });
   }
 
@@ -275,8 +301,9 @@ export class LoginComponent {
       this.errorMessage = '';
 
       const { email, password } = this.loginForm.value;
+      const hCaptchaToken = this.hCaptchaToken || '';
 
-      this.authService.login(email, password).subscribe({
+      this.authService.login(email, password, hCaptchaToken).subscribe({
         next: (response) => {
           this.isLoading = false;
           

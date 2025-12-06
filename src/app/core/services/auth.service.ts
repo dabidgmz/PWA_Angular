@@ -37,8 +37,8 @@ export class AuthService {
     return this.user;
   }
 
-  login(email: string, password: string): Observable<AuthResponse> {
-    const loginData: LoginRequest = { email, password };
+  login(email: string, password: string, hCaptchaToken: string): Observable<AuthResponse> {
+    const loginData: LoginRequest = { email, password, hCaptchaToken };
     
     return this.http.post<AuthResponse>(`${API_URL}/auth/login`, loginData).pipe(
       tap((response) => {
@@ -53,8 +53,8 @@ export class AuthService {
     );
   }
 
-  verifyCode(email: string, code: string): Observable<VerifyCodeResponse> {
-    const verifyData: VerifyCodeRequest = { email, code };
+  verifyCode(email: string, code: string, hCaptchaToken: string): Observable<VerifyCodeResponse> {
+    const verifyData: VerifyCodeRequest = { email, code, hCaptchaToken };
     
     return this.http.post<VerifyCodeResponse>(`${API_URL}/auth/verify-code`, verifyData).pipe(
       tap((response) => {
@@ -66,8 +66,8 @@ export class AuthService {
     );
   }
 
-  resendCode(email: string): Observable<ResendCodeResponse> {
-    const resendData: ResendCodeRequest = { email };
+  resendCode(email: string, hCaptchaToken: string): Observable<ResendCodeResponse> {
+    const resendData: ResendCodeRequest = { email, hCaptchaToken };
     
     return this.http.post<ResendCodeResponse>(`${API_URL}/auth/resend-code`, resendData).pipe(
       catchError((error) => {

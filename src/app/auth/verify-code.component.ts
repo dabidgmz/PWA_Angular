@@ -11,6 +11,8 @@ import { ToastService } from '../core/services/toast.service';
 import { OtpInputComponent } from '../shared/components/otp-input.component';
 import { VerifyCodeResponse } from '../core/models/auth';
 import Swal from 'sweetalert2';
+import { HcaptchaComponent } from '../components/hcaptcha.component';
+import { HCAPTCHA_SITE_KEY } from '../core/config';
 
 @Component({
   selector: 'app-verify-code',
@@ -22,7 +24,8 @@ import Swal from 'sweetalert2';
     MatIconModule,
     MatFormFieldModule,
     MatInputModule,
-    OtpInputComponent
+    OtpInputComponent,
+    HcaptchaComponent,
   ],
   template: `
     <div class="verify-container min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
@@ -41,7 +44,9 @@ import Swal from 'sweetalert2';
           <h1 class="text-3xl font-bold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent mb-2 drop-shadow-lg">
             Verificación de Código
           </h1>
-          <p class="text-white text-base font-medium opacity-90">Ingresa el código de 6 dígitos enviado a tu email</p>
+          <p class="text-white text-base font-medium opacity-90">
+            Ingresa el código de 6 dígitos enviado a tu email
+          </p>
         </div>
 
         <!-- Verification Card -->
@@ -71,8 +76,21 @@ import Swal from 'sweetalert2';
                 Código incorrecto. Intenta nuevamente.
               </p>
               
-              <p class="text-gray-500 text-xs mt-2">Ingresa el código de 6 dígitos que recibiste por email</p>
+              <p class="text-gray-500 text-xs mt-2">
+                Ingresa el código de 6 dígitos que recibiste por email
+              </p>
             </div>
+
+            <!-- hCaptcha -->
+            <app-hcaptcha
+              [siteKey]="hCaptchaSiteKey"
+              (tokenChange)="onCaptchaToken($event)"
+              (errorChange)="hCaptchaError = $event"
+            ></app-hcaptcha>
+
+            <p *ngIf="hCaptchaError" class="text-sm text-red-600">
+              {{ hCaptchaError }}
+            </p>
 
             <!-- Verify Button -->
             <div class="flex justify-center pt-2">
@@ -80,7 +98,12 @@ import Swal from 'sweetalert2';
                 mat-raised-button 
                 color="primary"
                 (click)="onVerifyClick()"
-                [disabled]="!currentCode || currentCode.length !== 6 || isLoading"
+                [disabled]="
+                  !currentCode ||
+                  currentCode.length !== 6 ||
+                  isLoading ||
+                  !hCaptchaToken
+                "
                 class="w-full max-w-xs py-3 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
                 <mat-icon class="mr-2">verified</mat-icon>
                 {{ isLoading ? 'Verificando...' : 'Verificar Código' }}
@@ -173,6 +196,11 @@ export class VerifyCodeComponent implements OnInit {
   isLoading = false;
   isResending = false;
 
+  // hCaptcha
+  hCaptchaSiteKey = HCAPTCHA_SITE_KEY;
+  hCaptchaToken: string | null = null;
+  hCaptchaError: string | null = null;
+
   constructor(
     private authService: AuthService,
     private router: Router,
@@ -211,6 +239,17 @@ export class VerifyCodeComponent implements OnInit {
     }
   }
 
+  // --- hCaptcha handlers ---
+
+  onCaptchaToken(token: string | null) {
+    this.hCaptchaToken = token;
+    if (token) {
+      this.hCaptchaError = null;
+    }
+  }
+
+  // --- OTP handlers ---
+
   onCodeChange(code: string) {
     this.currentCode = code;
     // Limpiar error cuando el usuario empieza a escribir
@@ -221,24 +260,34 @@ export class VerifyCodeComponent implements OnInit {
 
   onCodeComplete(code: string) {
     this.currentCode = code;
-    // Opcional: verificar automáticamente cuando se complete
-    // Comentado para que el usuario use el botón manualmente
-    // if (code.length === 6) {
+    // Si quisieras auto-verificar al completar:
+    // if (code.length === 6 && this.hCaptchaToken) {
     //   this.verifyCode(code);
     // }
   }
 
   onVerifyClick() {
+    if (!this.hCaptchaToken) {
+      this.hCaptchaError = 'Por favor completa el captcha.';
+      return;
+    }
+
     if (this.currentCode && this.currentCode.length === 6) {
       this.verifyCode(this.currentCode);
     }
   }
 
   verifyCode(code: string) {
+    if (!this.hCaptchaToken) {
+      this.hCaptchaError = 'Por favor completa el captcha.';
+      return;
+    }
+
     this.isLoading = true;
     this.hasError = false;
 
-    this.authService.verifyCode(this.email, code).subscribe({
+    // Aquí asumo que tu AuthService.verifyCode acepta (email, code, hCaptchaToken)
+    this.authService.verifyCode(this.email, code, this.hCaptchaToken).subscribe({
       next: (response: VerifyCodeResponse) => {
         this.isLoading = false;
         this.toastService.success(`Bienvenido, ${response.user.name}`);
@@ -283,6 +332,11 @@ export class VerifyCodeComponent implements OnInit {
       return;
     }
 
+    if (!this.hCaptchaToken) {
+      this.hCaptchaError = 'Por favor completa el captcha antes de reenviar el código.';
+      return;
+    }
+
     this.isResending = true;
     this.hasError = false;
 
@@ -291,10 +345,16 @@ export class VerifyCodeComponent implements OnInit {
       this.otpInput.reset();
     }
 
-    this.authService.resendCode(this.email).subscribe({
+    // Opcional: si tu endpoint de reenvío también usa captcha,
+    // pásale this.hCaptchaToken. Si no, quita el tercer argumento.
+    this.authService.resendCode(this.email, this.hCaptchaToken).subscribe({
       next: (response) => {
         this.isResending = false;
-        this.toastService.success(`Código reenviado exitosamente. ${response.expiresIn ? `Expira en ${response.expiresIn}` : 'Revisa tu email.'}`);
+        this.toastService.success(
+          `Código reenviado exitosamente. ${
+            response.expiresIn ? `Expira en ${response.expiresIn}` : 'Revisa tu email.'
+          }`
+        );
         
         Swal.fire({
           title: '¡Código Reenviado!',
@@ -312,7 +372,6 @@ export class VerifyCodeComponent implements OnInit {
         const errorMessage = error.error?.message || 'Error al reenviar el código. Intenta nuevamente.';
         this.toastService.error(errorMessage);
         
-        // Si el error es 401 o 403, puede ser que el email no sea válido o no sea profesor
         if (error.status === 401 || error.status === 403) {
           Swal.fire({
             title: 'Error al reenviar código',
@@ -333,4 +392,3 @@ export class VerifyCodeComponent implements OnInit {
     this.router.navigate(['/login']);
   }
 }
-
