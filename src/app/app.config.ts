@@ -17,7 +17,7 @@ export const appConfig: ApplicationConfig = {
     provideSweetAlert2(),
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
-      registrationStrategy: 'registerWhenStable:30000'
+      registrationStrategy: 'registerWhenStable:5000' // Reducido a 5 segundos para detectar actualizaciones más rápido
     }), 
     provideAnimationsAsync()
   ]

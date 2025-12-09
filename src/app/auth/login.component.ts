@@ -52,7 +52,7 @@ import { HCAPTCHA_SITE_KEY } from '../core/config';
             <mat-icon class="text-white text-5xl relative z-10">biotech</mat-icon>
           </div>
           <h1 class="text-4xl font-bold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent mb-3 drop-shadow-lg">
-            Profesor Oak
+           
           </h1>
           <p class="text-white text-lg font-medium opacity-90">Panel de Administración Pokémon</p>
         </div>
