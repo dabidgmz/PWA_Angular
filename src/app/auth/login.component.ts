@@ -47,14 +47,32 @@ import { HCAPTCHA_SITE_KEY } from '../core/config';
       <div class="w-full max-w-md relative z-10">
         <!-- Logo Section -->
         <div class="text-center mb-10 animate-fade-in">
-          <div class="w-28 h-28 bg-gradient-to-br from-blue-500 via-purple-600 to-pink-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl transform hover:scale-105 transition-transform duration-300 relative">
-            <div class="absolute inset-0 bg-gradient-to-br from-blue-400 to-purple-500 rounded-3xl blur-xl opacity-50"></div>
-            <mat-icon class="text-white text-5xl relative z-10">biotech</mat-icon>
+          <!-- Pokébola Logo -->
+          <div class="w-32 h-32 mx-auto mb-6 relative group">
+            <!-- Outer glow effect -->
+            <div class="absolute inset-0 bg-gradient-to-br from-red-400 to-yellow-300 rounded-full blur-2xl opacity-60 group-hover:opacity-80 transition-opacity duration-300"></div>
+            <!-- Main pokéball container -->
+            <div class="absolute inset-0 bg-white rounded-full shadow-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <!-- Top half (red) -->
+              <div class="absolute top-0 w-full h-1/2 bg-gradient-to-b from-red-600 to-red-500 rounded-t-full shadow-lg"></div>
+              <!-- Bottom half (white) -->
+              <div class="absolute bottom-0 w-full h-1/2 bg-gradient-to-b from-gray-100 to-white rounded-b-full"></div>
+              <!-- Center line -->
+              <div class="absolute top-1/2 w-full h-1 bg-black/20 transform -translate-y-1/2"></div>
+              <!-- Center circle (white with black outline) -->
+              <div class="absolute w-12 h-12 bg-white border-4 border-black rounded-full z-10 shadow-lg transform group-hover:scale-125 transition-transform duration-300">
+                <!-- Inner shine effect -->
+                <div class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full opacity-60"></div>
+              </div>
+            </div>
+            <!-- Rotating glow on hover -->
+            <div class="absolute inset-0 rounded-full border-4 border-transparent border-t-red-500 border-r-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-spin-slow"></div>
           </div>
-          <h1 class="text-4xl font-bold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent mb-3 drop-shadow-lg">
-           
+          
+          <h1 class="text-4xl font-bold text-white mb-2 drop-shadow-lg tracking-wide">
+            Pokémon Admin
           </h1>
-          <p class="text-white text-lg font-medium opacity-90">Panel de Administración Pokemon</p>
+          <p class="text-white text-lg font-medium opacity-90">Panel de Administración</p>
         </div>
 
         <!-- Login Card -->
@@ -207,6 +225,15 @@ import { HCAPTCHA_SITE_KEY } from '../core/config';
       20%, 40%, 60%, 80% { transform: translateX(5px); }
     }
     
+    @keyframes spin-slow {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    
     .animate-float {
       animation: float 6s ease-in-out infinite;
     }
@@ -225,6 +252,10 @@ import { HCAPTCHA_SITE_KEY } from '../core/config';
     
     .animate-shake {
       animation: shake 0.5s ease-in-out;
+    }
+    
+    .animate-spin-slow {
+      animation: spin-slow 3s linear infinite;
     }
     
     .pattern-overlay {
