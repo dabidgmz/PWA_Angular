@@ -72,7 +72,7 @@ import { HCAPTCHA_SITE_KEY } from '../core/config';
           <h1 class="text-4xl font-bold text-white mb-2 drop-shadow-lg tracking-wide">
             Pokémon Admin
           </h1>
-          <p class="text-white text-lg font-medium opacity-90">Panel de Administración</p>
+          <p class="text-white text-lg font-medium opacity-90">Panel de Administración Pokemon</p>
         </div>
 
         <!-- Login Card -->
