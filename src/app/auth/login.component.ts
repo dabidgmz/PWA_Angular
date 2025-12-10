@@ -54,7 +54,7 @@ import { HCAPTCHA_SITE_KEY } from '../core/config';
           <h1 class="text-4xl font-bold bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent mb-3 drop-shadow-lg">
            
           </h1>
-          <p class="text-white text-lg font-medium opacity-90">Panel de Administración Pokémon</p>
+          <p class="text-white text-lg font-medium opacity-90">Panel de Administración</p>
         </div>
 
         <!-- Login Card -->

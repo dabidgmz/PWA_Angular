@@ -1,21 +1,39 @@
 import { Component, OnInit } from '@angular/core';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { RouterOutlet } from '@angular/router';
-import { UpdateService } from './core/services/update.service';
+import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
+import { filter } from 'rxjs';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, MatSnackBarModule],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+  styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit {
   title = 'PWA_Angular';
 
-  constructor(private updateService: UpdateService) {}
+  constructor(private swUpdate: SwUpdate, private snackBar: MatSnackBar) {
+    if (!swUpdate.isEnabled) {
+      console.log('[SW] Deshabilitado (dev / ng serve)');
+      return;
+    }
 
-  ngOnInit(): void {
-    // El servicio de actualización se inicializa automáticamente en su constructor
-    // Esto asegura que se detecten las actualizaciones cuando la app inicia
+    console.log('[SW] Habilitado, escuchando updates');
+
+    swUpdate.versionUpdates
+      .pipe(filter((event): event is VersionReadyEvent => event.type === 'VERSION_READY'))
+      .subscribe(() => {
+        console.log('[SW] Nueva versión lista → mostrar snackbar');
+        this.snackBar.open('Nueva versión disponible', 'Actualizar')
+          .onAction()
+          .subscribe(() => {
+            console.log('[SW] Usuario acepta actualizar → recargando');
+            window.location.reload();
+          });
+      });
   }
+
+  ngOnInit(): void {}
 }
